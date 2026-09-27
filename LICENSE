@@ -1,0 +1,47 @@
+PROPRIETARY SOURCE-AVAILABLE & COLLABORATIVE DEVELOPMENT LICENSE
+
+Copyright (c) 2026 Soltan (Project Owner). All Rights Reserved.
+
+NOTICE AND INTELLECTUAL PROPERTY DECLARATION:
+This software, including all underlying source code, viral extraction algorithms,
+neural style intelligence systems, UI architectures, and compiled binaries, is the
+exclusive, confidential, and proprietary intellectual property of the Project Owner.
+
+TERMS AND CONDITIONS FOR AUTHORIZED COLLABORATORS & CONTRIBUTORS:
+
+1. GRANT OF COLLABORATIVE LICENSE:
+   Subject to the terms of this License, authorized collaborators, friends, and team
+   members are granted a personal, non-exclusive, non-transferable license to:
+   a) Clone and review the source code locally for research and development;
+   b) Modify, optimize, debug, and build features for the software;
+   c) Submit pull requests, patches, and code contributions directly back to the
+      Project Owner's official repository.
+
+2. OWNERSHIP OF CONTRIBUTIONS & INTELLECTUAL PROPERTY:
+   All contributions, bug fixes, enhancements, and derivative modifications made to
+   this codebase remain the exclusive intellectual property of the Project Owner.
+   By submitting code or contributing to this project, collaborators agree that full
+   copyright and ownership rights in all contributions vest in the Project Owner.
+
+3. RESTRICTIONS ON REDISTRIBUTION & COMMERCIAL USE:
+   a) NO UNAUTHORIZED REDISTRIBUTION: Collaborators may NOT redistribute, publish,
+      mirror, upload to public repositories without permission, or sublicense this
+      codebase or compiled binaries (.exe) to third parties.
+   b) NO COMMERCIAL FORKING: Collaborators may NOT use this software, its algorithms,
+      or derivatives to operate a standalone competing commercial product or service
+      without express written agreement from the Project Owner.
+   c) NO REMOVAL OF NOTICES: All copyright, author attributions, and proprietary notices
+      must remain intact in all copies and distributions.
+
+4. CONFIDENTIALITY & SECRETS PROTECTION:
+   a) All personal Google Gemini API keys, YouTube OAuth credentials (client_secret.json),
+      session tokens (token.json), and database records are strictly confidential.
+   b) Collaborators must NEVER commit, leak, publish, or transmit any credentials or
+      sensitive configuration files to git, public forums, or unauthorized third parties.
+   c) Each collaborator must supply their own individual API keys in their local .env file.
+
+5. DISCLAIMER OF WARRANTY:
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHOR OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY.

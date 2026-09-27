@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+
+  <!-- Header -->
+  <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-zinc-900 to-zinc-950 border border-purple-900/30">
+    <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+      <span>⚙️ Settings & Channel Connections</span>
+    </h1>
+    <p class="text-sm text-zinc-400 mt-1">
+      Connect one or multiple YouTube channels for 1-click publishing and manage your Gemini AI configuration.
+    </p>
+  </div>
+
+  <!-- FIX FOR GOOGLE OAUTH 403 BANNER -->
+  <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+    <div class="flex items-center gap-2 text-amber-300 font-bold text-sm">
+      <span>⚠️ Important: If you see "Access blocked: yt clipps has not completed Google verification"</span>
+    </div>
+    <div class="text-xs text-zinc-300 space-y-2">
+      <p>Because your Google Cloud app is currently in <em>Testing mode</em>, Google only allows accounts that you explicitly add as <strong>Test Users</strong>.</p>
+      <div class="p-3 bg-zinc-900/80 rounded-xl border border-zinc-800 space-y-1.5 font-mono text-[11px]">
+        <div>1. Open <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" class="text-purple-400 underline font-sans font-bold">Google Cloud OAuth Consent Screen ↗</a></div>
+        <div>2. Scroll down to <strong>"Test users"</strong> section.</div>
+        <div>3. Click <strong>"+ ADD USERS"</strong> and enter: <span class="text-amber-300 font-bold">azzebisoltan02@gmail.com</span> (and any other channel emails).</div>
+        <div>4. Click <strong>"SAVE"</strong>. You will now be able to link your channel immediately without any block!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gemini API Key Card -->
+  <div class="glass p-6 rounded-2xl space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+      <div>
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🤖 Google Gemini AI Key</span>
+        </h2>
+        <p class="text-xs text-zinc-400 mt-0.5">Used to find viral moments, score hooks, and write high-converting titles</p>
+      </div>
+      <a href="https://aistudio.google.com/apikey" target="_blank" class="text-xs font-semibold text-purple-400 hover:text-purple-300 underline">
+        Get 100% Free Key ↗
+      </a>
+    </div>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-zinc-300 mb-1">API Key</label>
+        <div class="flex gap-3">
+          <input 
+            type="password" 
+            id="geminiKeyInput" 
+            value="{{ gemini_key }}"
+            placeholder="AIzaSy..." 
+            class="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          />
+          <button 
+            onclick="saveGeminiKey()" 
+            class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-xs text-white shadow-md shadow-purple-600/30 transition-all cursor-pointer"
+          >
+            Save Key
+          </button>
+        </div>
+      </div>
+      <p class="text-[11px] text-zinc-500">
+        Stored securely in your local environment. Gemini 2.5 Flash / 1.5 Flash provides free daily request limits.
+      </p>
+    </div>
+  </div>
+
+  <!-- Connected YouTube Channels Card (MULTI-CHANNEL) -->
+  <div class="glass p-6 rounded-2xl space-y-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
+      <div>
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🔴 Connected YouTube Channels ({{ channels|length }})</span>
+        </h2>
+        <p class="text-xs text-zinc-400 mt-0.5">Connect multiple channels to manage and schedule clips to different audiences</p>
+      </div>
+      
+      {% if has_secret %}
+      <a href="/auth/youtube" class="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 font-bold text-xs text-white shadow-lg shadow-red-600/30 transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
+        <span>+ Connect YouTube Channel</span>
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Channels List -->
+    {% if not channels %}
+    <div class="text-center py-8 border border-dashed border-zinc-800 rounded-xl space-y-2">
+      <div class="text-2xl">📺</div>
+      <p class="text-xs text-zinc-400">No YouTube channels linked yet.</p>
+      {% if has_secret %}
+      <p class="text-xs text-zinc-500">Click the button above to authorize your first channel.</p>
+      {% else %}
+      <p class="text-xs text-amber-400">Place client_secret.json in storage/ to enable connecting channels.</p>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for ch in channels %}
+      <div class="glass-card p-4 rounded-xl flex items-center justify-between border border-zinc-800">
+        <div class="flex items-center gap-3 min-w-0">
+          {% if ch.thumbnail %}
+          <img src="{{ ch.thumbnail }}" class="w-10 h-10 rounded-full border border-zinc-700" alt="Avatar">
+          {% else %}
+          <div class="w-10 h-10 rounded-full bg-red-600/20 text-red-400 flex items-center justify-center font-bold text-sm">
+            ▶️
+          </div>
+          {% endif %}
+          <div class="min-w-0">
+            <h4 class="font-bold text-sm text-white truncate">{{ ch.title }}</h4>
+            <p class="text-[11px] text-zinc-400">
+              {{ "{:,}".format(ch.subscribers|default(0)) }} subs • {{ "{:,}".format(ch.views|default(0)) }} views
+            </p>
+          </div>
+        </div>
+
+        <button 
+          onclick="removeChannel('{{ ch.channel_id }}')" 
+          class="p-2 rounded-lg bg-zinc-800 hover:bg-red-500/20 text-zinc-400 hover:text-red-300 text-xs transition-colors cursor-pointer"
+          title="Disconnect Channel"
+        >
+          🗑️
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Status of client_secret.json -->
+    <div class="pt-3 border-t border-zinc-800 text-xs text-zinc-400 flex items-center justify-between">
+      <span>OAuth Configuration:</span>
+      {% if has_secret %}
+      <span class="text-emerald-400 font-semibold">✓ client_secret.json loaded in storage/</span>
+      {% else %}
+      <span class="text-amber-400 font-semibold">⚠️ client_secret.json missing in storage/</span>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function saveGeminiKey() {
+  const key = document.getElementById('geminiKeyInput').value.trim();
+  if (!key) {
+    alert("Please enter a valid Gemini API Key.");
+    return;
+  }
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gemini_api_key: key })
+    });
+    if (res.ok) {
+      alert("✅ Gemini API Key saved successfully!");
+      window.location.reload();
+    }
+  } catch (err) {
+    alert("Error saving key: " + err.message);
+  }
+}
+
+async function removeChannel(channelId) {
+  if (!confirm("Are you sure you want to disconnect this YouTube channel?")) return;
+  try {
+    const res = await fetch('/api/channels/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel_id: channelId })
+    });
+    if (res.ok) {
+      window.location.reload();
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ViralClip AI — Automated YouTube Shorts Studio{% endblock %}</title>
+  <link rel="icon" type="image/x-icon" href="/static/icon.ico">
+  <link rel="icon" type="image/png" href="/static/icon.png">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass-card { background: rgba(39, 39, 42, 0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col selection:bg-purple-500 selection:text-white">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-50 glass border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <img src="/static/icon.png" alt="ViralClip AI Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-purple-500/20 object-cover border border-purple-500/30">
+          <div>
+            <span class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
+              ViralClip AI
+            </span>
+            <span class="text-xs ml-1 px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800/60 font-semibold">Shorts Studio</span>
+          </div>
+        </div>
+
+        <!-- Channel Profile Selector & Navigation Links -->
+        <div class="flex items-center gap-3">
+          {% if channels %}
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 border border-purple-500/40 shadow-inner">
+            <span class="text-[11px] text-zinc-400 font-semibold hidden sm:inline">Profile:</span>
+            <select 
+              id="channelProfileSelector" 
+              onchange="switchChannelProfile(this.value)" 
+              class="bg-transparent text-xs text-purple-300 font-bold focus:outline-none cursor-pointer max-w-[180px] truncate"
+            >
+              {% for ch in channels %}
+              <option value="{{ ch.channel_id }}" class="bg-zinc-900 text-white" {% if ch.channel_id == active_channel_id %}selected{% endif %}>
+                📺 {{ ch.title }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <a href="/studio" class="px-3.5 py-2 rounded-lg text-sm font-semibold transition-all {% if active_tab == 'studio' %}bg-purple-600 text-white shadow-lg shadow-purple-600/30{% else %}text-zinc-400 hover:text-white hover:bg-zinc-800/60{% endif %}">
+            ⚡ Studio
+          </a>
+          <a href="/queue" class="px-3.5 py-2 rounded-lg text-sm font-semibold transition-all {% if active_tab == 'queue' %}bg-purple-600 text-white shadow-lg shadow-purple-600/30{% else %}text-zinc-400 hover:text-white hover:bg-zinc-800/60{% endif %}">
+            📅 Queue
+          </a>
+          <a href="/analytics" class="px-3.5 py-2 rounded-lg text-sm font-semibold transition-all {% if active_tab == 'analytics' %}bg-purple-600 text-white shadow-lg shadow-purple-600/30{% else %}text-zinc-400 hover:text-white hover:bg-zinc-800/60{% endif %}">
+            📈 Analytics
+          </a>
+          <a href="/settings" class="px-3.5 py-2 rounded-lg text-sm font-semibold transition-all {% if active_tab == 'settings' %}bg-purple-600 text-white shadow-lg shadow-purple-600/30{% else %}text-zinc-400 hover:text-white hover:bg-zinc-800/60{% endif %}">
+            ⚙️ Settings
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-900 py-6 text-center text-xs text-zinc-500">
+    ViralClip AI Studio &copy; 2026 — Multi-Channel High-Retention YouTube Shorts Automation
+  </footer>
+
+  <script>
+    async function switchChannelProfile(channelId) {
+      try {
+        const res = await fetch('/api/set-active-channel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channel_id: channelId })
+        });
+        if (res.ok) {
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error("Failed to switch profile:", e);
+      }
+    }
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

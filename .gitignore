@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables & Private secrets (CRITICAL)
+.env
+.env.local
+.env.production
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
+*.exe
+
+# Temporary scratch and test data
+scratch/
+database.json
+
+# Storage contents (Private user data, downloads, tokens & DB)
+storage/downloads/*
+storage/processed/*
+storage/*.mp4
+storage/*.jpg
+storage/*.wav
+storage/*.ass
+storage/*.db
+storage/*.db-shm
+storage/*.db-wal
+storage/channels.json
+storage/client_secret*.json
+storage/token*.json
+storage/tokens/
+storage/viral_playbook.json
+storage/database.json
+
+# Keep storage folder structure
+!storage/.gitkeep
+!storage/README.md
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
