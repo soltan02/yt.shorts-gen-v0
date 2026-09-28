@@ -465,19 +465,19 @@ def api_render_clip():
 
     try:
         cached = video_cache.get(video_id, {})
-        # Auto-resolve layout: default to phone-adaptive 'auto'
-        if layout == 'auto' or not layout:
-            layout = data.get('recommended_layout') or cached.get('recommended_layout', 'auto')
-        if not layout:
-            layout = 'auto'
+        # Auto-resolve layout: default to Smart Full-Screen 9:16 (center_crop)
+        if not layout or layout == 'auto':
+            rec = data.get('recommended_layout') or cached.get('recommended_layout')
+            layout = rec if rec in ('center_crop', 'blur_stack') else 'center_crop'
+        if layout not in ('center_crop', 'blur_stack'):
+            layout = 'center_crop'
+
+        show_top_hook = bool(data.get('show_top_hook', False))
 
         if not caption_art_direction or caption_art_direction == 'auto':
             caption_art_direction = cached.get('auto_intelligence', {}).get('auto_selected_art_direction') or 'yellow_electric'
 
-        # 1. Download specific section
-        raw_cut_path = download_clip_section(video_id, start, end, DOWNLOADS_DIR)
-
-        # 2. Guarantee transcript is loaded (from memory, disk cache, or fresh fetch)
+        # 1. Guarantee transcript is loaded (from memory, disk cache, or fresh fetch)
         transcript = cached.get("transcript")
         transcript_disk_path = os.path.join(DOWNLOADS_DIR, f"{video_id}_transcript.json")
 
@@ -497,6 +497,18 @@ def api_render_clip():
             except Exception:
                 pass
 
+        # Apply speech & thought completion boundary snapping
+        if transcript and not edited_transcript:
+            from app.core.viral_ai import snap_to_speech_boundary
+            snapped_s = snap_to_speech_boundary(start, transcript, is_start=True, max_drift=3.0)
+            snapped_e = snap_to_speech_boundary(end, transcript, is_start=False, max_drift=5.5, current_start=snapped_s)
+            if 15.0 <= (snapped_e - snapped_s) <= 59.5:
+                start = snapped_s
+                end = snapped_e
+
+        # 2. Download specific section with speech-accurate boundaries
+        raw_cut_path = download_clip_section(video_id, start, end, DOWNLOADS_DIR)
+
         # Apply inline caption quick-fix if user edited the transcript
         if edited_transcript:
             if isinstance(edited_transcript, list) and edited_transcript:
@@ -507,7 +519,7 @@ def api_render_clip():
                     w_dur = max(0.18, (end - start) / len(words))
                     transcript = [{"start": start + i * w_dur, "duration": w_dur, "text": w} for i, w in enumerate(words)]
 
-        # 3. Generate dynamic styled ASS subtitles with Top Psychological Hook Banner
+        # 3. Generate dynamic styled ASS subtitles (Top Header is OFF by default for clean video)
         settings = tracker.get_settings()
         gemini_key = os.getenv("GEMINI_API_KEY") or settings.get("gemini_api_key")
 
@@ -522,7 +534,8 @@ def api_render_clip():
             part_info=part_info,
             subscriber_cta=subscriber_cta,
             caption_art_direction=caption_art_direction,
-            sticker_badge=sticker_badge
+            sticker_badge=sticker_badge,
+            show_top_hook=show_top_hook
         )
 
         # 4. Render 9:16 vertical video with burnt-in subtitles & top hook sticker
@@ -824,7 +837,10 @@ def api_autopilot():
             return jsonify({"error": "No high-retention clips found in this video."}), 400
 
         best_clip = clips[0]
-        layout = analysis.get("recommended_layout", "auto")
+        layout = data.get('layout') or analysis.get("recommended_layout", "center_crop")
+        if layout not in ('center_crop', 'blur_stack'):
+            layout = 'center_crop'
+        show_top_hook = bool(data.get('show_top_hook', False))
 
         # Step 3: Download Section
         start = best_clip["start_seconds"]
@@ -833,7 +849,7 @@ def api_autopilot():
 
         # Step 4: Subtitles with Caption Review Bot
         sub_path = os.path.join(DOWNLOADS_DIR, f"{video_id}_{int(start)}_{int(end)}.ass")
-        psych_hook = best_clip.get("psychological_hook") or "He didn't mean to say this..."
+        psych_hook = best_clip.get("psychological_hook") or ""
         caption_art = best_clip.get("caption_art_direction") or "yellow_electric"
         sticker_badge = best_clip.get("sticker_badge")
         _, caption_review = generate_dynamic_subtitles(
@@ -845,7 +861,8 @@ def api_autopilot():
             psychological_hook=psych_hook,
             subscriber_cta=best_clip.get("subscriber_cta"),
             caption_art_direction=caption_art,
-            sticker_badge=sticker_badge
+            sticker_badge=sticker_badge,
+            show_top_hook=show_top_hook
         )
 
         # Step 5: Render 9:16 vertical video HD

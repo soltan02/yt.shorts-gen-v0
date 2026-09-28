@@ -8,15 +8,44 @@ from google import genai
 from google.genai import types
 from app.core.subtitle import censor_demonetized_text
 
-def snap_to_sentence_boundary(
+INCOMPLETE_ENDING_WORDS = {
+    # Conjunctions & relative connectors
+    "and", "or", "but", "so", "because", "although", "though", "however", "since", "unless",
+    # Prepositions
+    "to", "of", "in", "for", "on", "with", "at", "by", "from", "up", "about", "into", "over", "after", "through", "under",
+    # Articles & determiners
+    "the", "a", "an", "this", "that", "these", "those", "my", "your", "his", "her", "their", "our",
+    # Relative pronouns & questions
+    "which", "who", "whom", "whose", "what", "where", "when", "why", "how",
+    # Auxiliary & linking verbs
+    "is", "are", "was", "were", "am", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would", "shall", "should", "can", "could", "may", "might", "must",
+    # Fillers & incomplete transitions
+    "like", "um", "uh", "just", "really", "very", "actually", "also", "then", "if"
+}
+
+SENTENCE_STARTER_WORDS = {
+    "so", "now", "then", "eventually", "finally", "therefore", "basically", "honestly",
+    "i", "he", "she", "they", "we", "you", "it", "this", "that", "one", "first", "second",
+    "suddenly", "however", "well", "look", "listen", "see", "meanwhile", "next"
+}
+
+def snap_to_speech_boundary(
     target_seconds: float,
     transcript: List[Dict],
-    max_drift: float = 3.5
+    is_start: bool = False,
+    max_drift: float = 6.0,
+    current_start: float = 0.0,
+    min_duration: float = 15.0,
+    max_duration: float = 58.5
 ) -> float:
     """
-    Snaps a clip boundary (particularly end_seconds) to the end of a natural spoken sentence.
-    Matches sentence-terminal punctuation (., ?, !) or speech pauses so words and thoughts
-    are not abruptly severed mid-word, producing broadcast-smooth clip endings.
+    Intelligently snaps clip boundaries to natural spoken sentence and thought boundaries.
+    Guarantees:
+      - Never ends mid-speech, mid-word, or on incomplete connectors ('and', 'because', 'which', etc.)
+      - Snaps to natural acoustic pauses/silence between phrases
+      - Preserves full speaker thoughts and punchlines
+      - Adds a +0.28s vocal decay room tone cushion to prevent audio codec clipping
+      - Snaps start to clean sentence openers rather than trailing mid-clause words
     """
     if not transcript:
         return target_seconds
@@ -24,23 +53,117 @@ def snap_to_sentence_boundary(
     best_time = target_seconds
     best_score = float('inf')
 
-    for item in transcript:
-        s = float(item.get("start", 0.0))
-        d = float(item.get("duration", 0.0))
-        e = s + d
-        text = str(item.get("text", "")).strip()
+    if is_start:
+        # Snap start timestamp to beginning of a clean sentence / thought
+        for i, item in enumerate(transcript):
+            s = float(item.get("start", 0.0))
+            text = str(item.get("text", "")).strip()
+            if not text:
+                continue
 
-        has_terminal = bool(re.search(r'[\.\?\!\…]\s*$', text))
+            dist = abs(s - target_seconds)
+            if dist > max_drift:
+                continue
 
-        dist = abs(e - target_seconds)
-        if dist <= max_drift:
-            # Strong preference for sentence terminal punctuation
-            score = dist - (1.8 if has_terminal else 0.0)
+            words = text.split()
+            first_w = re.sub(r'[^\w]', '', words[0]).lower() if words else ""
+
+            penalty = 0.0
+            if first_w in {"and", "but", "or", "because"}:
+                penalty += 8.0
+
+            bonus_starter = 0.0
+            if first_w in SENTENCE_STARTER_WORDS or (words and words[0][:1].isupper()):
+                bonus_starter += 4.0
+
+            bonus_prev = 0.0
+            if i > 0:
+                prev_item = transcript[i-1]
+                prev_e = float(prev_item.get("start", 0.0)) + float(prev_item.get("duration", 0.0))
+                prev_text = str(prev_item.get("text", "")).strip()
+                if re.search(r'[\.\?\!\…]\s*$', prev_text):
+                    bonus_prev += 5.0
+                gap = s - prev_e
+                if gap >= 0.25:
+                    bonus_prev += 3.5
+
+            score = dist + penalty - bonus_starter - bonus_prev
             if score < best_score:
                 best_score = score
-                best_time = e
+                best_time = max(0.0, s - 0.15)  # 150ms clean attack pre-roll
+
+    else:
+        # Snap end timestamp to a fully resolved sentence or thought
+        for i, item in enumerate(transcript):
+            s = float(item.get("start", 0.0))
+            d = float(item.get("duration", 0.0))
+            e = s + d
+            text = str(item.get("text", "")).strip()
+            if not text:
+                continue
+
+            dist = abs(e - target_seconds)
+            cand_dur = e - current_start
+            if dist > max_drift:
+                continue
+            if cand_dur < min_duration or cand_dur > max_duration:
+                continue
+
+            words = text.split()
+            last_w = re.sub(r'[^\w]', '', words[-1]).lower() if words else ""
+
+            penalty = 0.0
+            if last_w in INCOMPLETE_ENDING_WORDS:
+                penalty += 18.0
+
+            has_terminal = bool(re.search(r'[\.\?\!\…]\s*$', text))
+            bonus_terminal = 6.0 if has_terminal else 0.0
+
+            bonus_pause = 0.0
+            bonus_next = 0.0
+            if i + 1 < len(transcript):
+                next_item = transcript[i+1]
+                next_s = float(next_item.get("start", e))
+                next_text = str(next_item.get("text", "")).strip()
+                next_words = next_text.split()
+                next_first_w = re.sub(r'[^\w]', '', next_words[0]).lower() if next_words else ""
+
+                gap = max(0.0, next_s - e)
+                if gap >= 0.30:
+                    bonus_pause += 5.0
+                elif gap >= 0.15:
+                    bonus_pause += 2.0
+                elif gap < 0.05 and not has_terminal:
+                    penalty += 3.0
+
+                if next_first_w in SENTENCE_STARTER_WORDS or (next_words and next_words[0][:1].isupper()):
+                    bonus_next += 3.5
+            else:
+                bonus_pause += 3.0
+
+            score = dist + penalty - bonus_terminal - bonus_pause - bonus_next
+            if score < best_score:
+                best_score = score
+                best_time = e + 0.28  # 280ms vocal decay room tone cushion
 
     return round(best_time, 2)
+
+def snap_to_sentence_boundary(
+    target_seconds: float,
+    transcript: List[Dict],
+    max_drift: float = 6.0,
+    is_start: bool = False,
+    current_start: float = 0.0
+) -> float:
+    """Backward-compatible wrapper routing to snap_to_speech_boundary."""
+    return snap_to_speech_boundary(
+        target_seconds=target_seconds,
+        transcript=transcript,
+        is_start=is_start,
+        max_drift=max_drift,
+        current_start=current_start
+    )
+
 
 
 def generate_title_archetypes(base_title: str, hook_text: str = "", niche: str = "storytelling_crime") -> Dict[str, str]:
@@ -187,6 +310,10 @@ HOOK → CONTEXT → ESCALATION → PAYOFF
 - DO NOT over-edit natural speech: preserve pauses when they increase anticipation, comedic timing, emotional impact, or suspense.
 - Match source personality: Podcast (fast conversational pacing, punch-ins), Educational (clarity, density, keywords), Storytelling (chronological escalation, payoff), Interview (strong disagreement/revelations).
 
+5. CRITICAL REQUIREMENT — COMPLETE THOUGHTS & SENTENCES ONLY (NEVER CUT MID-SPEECH):
+- start_seconds: MUST be the exact second the speaker BEGINS a fresh sentence or thought. NEVER start mid-phrase, mid-syllable, or on a trailing conjunction (e.g., "...and then").
+- end_seconds: MUST be the exact second the speaker COMPLETES their full sentence, punchline, or reveal. NEVER end mid-sentence, mid-speech, or on connectors like "because", "which", "and", "or", "to", "that". The thought must be 100% finished and satisfying.
+
 NICHE FOCUS: {niche_label}
 {niche_instruction}
 
@@ -299,6 +426,7 @@ MASTER RULES FOR STORY-BASED SHORTS:
 - Each part must be interesting independently, while compelling the viewer to watch the next part.
 - Do NOT artificially split one sentence or thought simply to create multiple parts.
 - Never invent dialogue, manipulate quotes, or distort the speaker's true meaning.
+- COMPLETE THOUGHTS ONLY: Every part must start at the beginning of a sentence and conclude on a fully resolved sentence or cliffhanger. NEVER cut off mid-speech, mid-sentence, or on connectors like "because", "which", "and", "or", "to".
 
 PART-BY-PART PROGRESSION (100% CONTIGUOUS SAME STORY ARC):
 - PART 1 (Inciting Incident & Hook): Opens in the middle of tension. Introduces the shocking premise. Ends at a natural curiosity point / unanswered question (e.g. "I didn't realize what was happening until...").
@@ -591,9 +719,11 @@ def analyze_viral_clips(
                 start = float(c.get("start_seconds", 0.0))
                 end = float(c.get("end_seconds", start + 35.0))
 
-                # Smooth clip endings: snap end timestamp to natural spoken sentence boundary
-                snapped_end = snap_to_sentence_boundary(end, transcript, max_drift=3.5)
-                if snapped_end - start >= 15.0 and snapped_end - start <= 60.0:
+                # Smooth clip boundaries: snap start to clean sentence opener, snap end to complete thought
+                snapped_start = snap_to_speech_boundary(start, transcript, is_start=True, max_drift=4.0)
+                snapped_end = snap_to_speech_boundary(end, transcript, is_start=False, max_drift=6.0, current_start=snapped_start)
+                if 16.0 <= (snapped_end - snapped_start) <= 59.0:
+                    start = snapped_start
                     end = snapped_end
 
                 duration = round(end - start, 1)
@@ -768,12 +898,13 @@ def analyze_viral_clips(
                         tot_parts = 3
                         if validated_clips:
                             prev_end = float(validated_clips[-1]["end_seconds"])
-                            c_start = max(0.0, prev_end - 1.5)
+                            c_start = snap_to_speech_boundary(max(0.0, prev_end - 1.5), transcript, is_start=True, max_drift=3.0)
                         else:
-                            c_start = max(10.0, min(30.0, total_video_dur * 0.08))
+                            raw_s = max(10.0, min(30.0, total_video_dur * 0.08))
+                            c_start = snap_to_speech_boundary(raw_s, transcript, is_start=True, max_drift=3.5)
 
                         c_raw_end = c_start + 38.0
-                        c_end = snap_to_sentence_boundary(c_raw_end, transcript, max_drift=3.5)
+                        c_end = snap_to_speech_boundary(c_raw_end, transcript, is_start=False, max_drift=6.0, current_start=c_start)
                         if c_end - c_start < 18.0:
                             c_end = c_start + 38.0
                         c_dur = round(c_end - c_start, 1)
@@ -831,9 +962,9 @@ def analyze_viral_clips(
                         if not cand_items:
                             continue
                         cand = min(cand_items, key=lambda it: abs(float(it["start"]) - target_sec))
-                        c_start = float(cand["start"])
+                        c_start = snap_to_speech_boundary(float(cand["start"]), transcript, is_start=True, max_drift=3.5)
                         c_raw_end = c_start + 38.0
-                        c_end = snap_to_sentence_boundary(c_raw_end, transcript, max_drift=3.5)
+                        c_end = snap_to_speech_boundary(c_raw_end, transcript, is_start=False, max_drift=6.0, current_start=c_start)
                         if c_end - c_start < 15.0:
                             c_end = c_raw_end
                         c_dur = round(c_end - c_start, 1)
@@ -975,12 +1106,12 @@ def analyze_viral_clips(
 
     if clip_mode == "multipart_series":
         # Multi-part series: chronological sequential story chapters (Part 2 starts after Part 1)
-        story_start = max(10.0, min(30.0, effective_total_dur * 0.08))
+        story_start = snap_to_speech_boundary(max(10.0, min(30.0, effective_total_dur * 0.08)), transcript or [], is_start=True, max_drift=4.0)
         cur_start = story_start
         for i in range(3):
             part_num = i + 1
             raw_end = cur_start + 38.0
-            p_end = snap_to_sentence_boundary(raw_end, transcript or [], max_drift=3.5)
+            p_end = snap_to_speech_boundary(raw_end, transcript or [], is_start=False, max_drift=6.0, current_start=cur_start)
             if p_end - cur_start < 18.0:
                 p_end = cur_start + 38.0
             dur = round(p_end - cur_start, 1)
@@ -1037,7 +1168,7 @@ def analyze_viral_clips(
             eligible_items = [it for it in (transcript or []) if float(it.get("start", 0)) >= prev_end + 5.0]
             if eligible_items:
                 closest_item = min(eligible_items, key=lambda it: abs(float(it.get("start", 0)) - target_time))
-                start = float(closest_item.get("start", 0))
+                start = snap_to_speech_boundary(float(closest_item.get("start", 0)), transcript or [], is_start=True, max_drift=3.5)
                 hook_spoken = closest_item.get("text", "")[:60]
             else:
                 start = target_time
@@ -1047,7 +1178,7 @@ def analyze_viral_clips(
                 start = prev_end + 10.0
 
             raw_end = min(effective_total_dur, start + 38.0)
-            end = snap_to_sentence_boundary(raw_end, transcript or [], max_drift=3.5)
+            end = snap_to_speech_boundary(raw_end, transcript or [], is_start=False, max_drift=6.0, current_start=start)
             if end - start < 18.0 or end <= start:
                 end = min(effective_total_dur, start + 38.0)
             dur = round(end - start, 1)

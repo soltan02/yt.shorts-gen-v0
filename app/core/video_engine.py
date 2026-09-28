@@ -101,32 +101,29 @@ def render_vertical_clip(
         # Explicit crop: zoom in to fill whole 9:16 frame with neural face center bias
         solo_x = face_coords.get("solo_x_norm", 0.50)
         crop_x = int(max(0, min(width - (height * 9.0 / 16.0), width * solo_x - (height * 9.0 / 32.0))))
-        zoom_crop = "crop=w='if(lte(t,2.5),iw*0.94,iw)':h='if(lte(t,2.5),ih*0.94,ih)':x='(iw-ow)/2':y='(ih-oh)/2'," if enable_micro_zoom else ""
         filter_complex = (
-            f"[0:v]crop=ih*9/16:ih:{crop_x}:0,{zoom_crop}scale=1080:1920:flags=bicubic,"
-            "unsharp=5:5:1.0:5:5:0.0,"
-            f"eq=contrast=1.08:saturation=1.18{sub_filter}[outv]"
+            f"[0:v]crop=ih*9/16:ih:{crop_x}:0,scale=1080:1920:flags=bicubic,"
+            "unsharp=3:3:0.35:3:3:0.0,"
+            f"eq=contrast=1.03:saturation=1.06{sub_filter}[outv]"
         )
     elif aspect_ratio <= 0.65:
         # Already vertical (9:16 phone video): direct scale without blur background
-        zoom_filter = "crop=w='if(lte(t,2.5),iw*0.94,iw)':h='if(lte(t,2.5),ih*0.94,ih)':x='(iw-ow)/2':y='(ih-oh)/2'," if enable_micro_zoom else ""
         filter_complex = (
-            f"[0:v]{zoom_filter}scale=1080:1920:force_original_aspect_ratio=decrease:flags=bicubic,"
+            f"[0:v]scale=1080:1920:force_original_aspect_ratio=decrease:flags=bicubic,"
             "pad=1080:1920:(1080-iw)/2:(1920-ih)/2:black,"
-            "unsharp=5:5:0.8:5:5:0.0,"
-            f"eq=contrast=1.06:saturation=1.12{sub_filter}[outv]"
+            "unsharp=3:3:0.35:3:3:0.0,"
+            f"eq=contrast=1.03:saturation=1.06{sub_filter}[outv]"
         )
     else:
-        # Landscape 16:9, 4:3, 1:1, or 21:9 (Phone-Adaptive full frame with ambient blurred background):
-        zoom_crop = "crop=w='if(lte(t,2.5),iw*0.94,iw)':h='if(lte(t,2.5),ih*0.94,ih)':x='(iw-ow)/2':y='(ih-oh)/2'," if enable_micro_zoom else ""
+        # Landscape 16:9, 4:3, 1:1, or 21:9 (Studio Blur Stack with Gaussian ambient background):
         filter_complex = (
             "[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=bicubic,"
             "crop=1080:1920,"
-            "boxblur=24:4,"
-            "eq=brightness=-0.22:contrast=1.05[bg];"
-            f"[0:v]{zoom_crop}scale=1080:1920:force_original_aspect_ratio=decrease:flags=bicubic,"
-            "unsharp=5:5:0.6:5:5:0.0,"
-            "eq=contrast=1.05:saturation=1.10[fg];"
+            "gblur=sigma=28:steps=2,"
+            "eq=brightness=-0.32:contrast=1.12[bg];"
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease:flags=bicubic,"
+            "unsharp=3:3:0.35:3:3:0.0,"
+            "eq=contrast=1.03:saturation=1.06[fg];"
             f"[bg][fg]overlay=(W-w)/2:(H-h)/2{sub_filter}[outv]"
         )
 
@@ -134,18 +131,18 @@ def render_vertical_clip(
     audio_map_args = ["-map", "0:a?"]
     audio_cmd_args = []
     if has_audio:
-        fade_out_start = max(0.1, duration - 0.40)
+        fade_out_start = max(0.1, duration - 0.28)
         if enable_hook_sfx:
             # Broadcast loudness normalization + subtle audio whoosh riser at T=0.0s for 25% higher scroll-stopping
             audio_sfx_filter = (
-                f";[0:a]loudnorm=I=-14:LRA=7:tp=-1.5,afade=t=in:st=0:d=0.20,afade=t=out:st={fade_out_start:.2f}:d=0.40[amain];"
+                f";[0:a]loudnorm=I=-14:LRA=7:tp=-1.5,afade=t=in:st=0:d=0.18,afade=t=out:st={fade_out_start:.2f}:d=0.25[amain];"
                 "anoisesrc=d=0.35:c=pink:r=48000,lowpass=f=850,afade=t=in:st=0:d=0.08,afade=t=out:st=0.08:d=0.27,volume=0.38[asfx];"
                 "[amain][asfx]amix=inputs=2:duration=first:dropout_transition=2[outa]"
             )
             filter_complex += audio_sfx_filter
             audio_map_args = ["-map", "[outa]"]
         else:
-            audio_fade_filter = f"loudnorm=I=-14:LRA=7:tp=-1.5,afade=t=in:st=0:d=0.25,afade=t=out:st={fade_out_start:.2f}:d=0.40"
+            audio_fade_filter = f"loudnorm=I=-14:LRA=7:tp=-1.5,afade=t=in:st=0:d=0.20,afade=t=out:st={fade_out_start:.2f}:d=0.25"
             audio_map_args = ["-map", "0:a?"]
             audio_cmd_args = ["-af", audio_fade_filter]
 

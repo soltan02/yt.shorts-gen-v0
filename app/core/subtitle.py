@@ -213,18 +213,17 @@ def generate_dynamic_subtitles(
     part_info: Optional[Dict] = None,
     subscriber_cta: Optional[str] = None,
     caption_art_direction: Optional[str] = None,
-    sticker_badge: Optional[str] = None
+    sticker_badge: Optional[str] = None,
+    show_top_hook: bool = False
 ) -> Tuple[str, Dict]:
     """
     Generate viral, punchy, fast-paced ASS subtitles verified by the Caption Review Bot.
     
     KEY VIRAL DESIGN RULES:
     1. REEL-MATCHING ART DIRECTION: Palette, fonts, and accents dynamically matched to the reel's mood.
-    2. NOT ALL OF THEM AT ONCE: Elements are sequenced smoothly over time:
-       - Top Hook Sticker: Enters at 0.0s to hook viewers, then exits at ~4.0s.
-       - Subtitles: Flow in the middle safe-zone with dynamic highlight words & contextual punch emojis.
-       - Outro CTA Banner: Enters only in the final 3.0s after the hook sticker is gone.
-    3. HIGH ATTENTION EMOJIS: Contextually injected into punch words and badges.
+    2. OPTIONAL CLEAN TOP HEADER: Only shown if show_top_hook is True; default is clean video without clutter.
+    3. LOWER-THIRD SUBTITLE SAFE ZONE: Perfectly positioned at MarginV=640 to prevent collisions with UI.
+    4. SEQUENCED OUTRO CTA: Sub-CTA appears cleanly in the final 3.0s window.
     """
     os.makedirs(os.path.dirname(output_ass_path), exist_ok=True)
 
@@ -234,10 +233,9 @@ def generate_dynamic_subtitles(
     hl_color = art["highlight_ass"]
     font_name = art["font"]
     sticker_accent = art["sticker_accent"]
-    sticker_bg = art["sticker_bg"]
     outline_color = art.get("outline_color", "&H00000000&")
     shadow_color = art.get("shadow_color", "&H80000000&")
-    outline_size = art.get("outline_size", 7)
+    outline_size = min(art.get("outline_size", 6), 6)
 
     # Build Dynamic Header matching Art Direction style
     ass_header = f"""[Script Info]
@@ -248,10 +246,10 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ViralStyle,{font_name},74,&H00FFFFFF,{hl_color},{outline_color},{shadow_color},-1,0,0,0,100,100,2,0,1,{outline_size},4,2,70,70,760,1
-Style: HighlightStyle,{font_name},78,{hl_color},&H00FFFFFF,{outline_color},{shadow_color},-1,0,0,0,105,105,2,0,1,{outline_size + 1},4,2,70,70,760,1
-Style: TopPsychHook,Arial Black,50,&H00FFFFFF,{sticker_accent},&H00000000,{sticker_bg},-1,0,0,0,100,100,1.2,0,3,14,0,8,60,60,260,1
-Style: SubCTA,Arial Black,58,&H00FFFFFF,{hl_color},{outline_color},&H00121212,-1,0,0,0,102,102,1.5,0,3,18,0,2,60,60,460,1
+Style: ViralStyle,{font_name},62,&H00FFFFFF,{hl_color},{outline_color},{shadow_color},-1,0,0,0,100,100,1.8,0,1,{outline_size},3,2,65,65,640,1
+Style: HighlightStyle,{font_name},66,{hl_color},&H00FFFFFF,{outline_color},{shadow_color},-1,0,0,0,104,104,2.0,0,1,{outline_size + 1},4,2,65,65,640,1
+Style: TopPsychHook,Arial,36,&H00FFFFFF,{sticker_accent},&H00000000,&H60000000,-1,0,0,0,100,100,1.2,0,1,3,2,8,60,60,180,1
+Style: SubCTA,Arial Black,54,&H00FFFFFF,{hl_color},{outline_color},&H00121212,-1,0,0,0,102,102,1.5,0,3,14,0,2,60,60,420,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -309,44 +307,47 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         t_end = format_ass_time(e_time)
         events.append(f"Dialogue: 0,{t_start},{t_end},ViralStyle,,0,0,0,,{formatted_text}")
 
-    # 2. Add Top Sticker (Sequential Timing: Only in Opening Hook Window 0.0s to ~4.0s)
+    # 2. Add Top Header Sticker (Only if explicitly enabled via show_top_hook)
     clip_dur = max(1.0, clip_end - clip_start)
 
-    # Resolve sticker badge text
-    if part_info:
-        part_num = part_info.get("part_number", 1)
-        total_parts = part_info.get("total_parts", 3)
-        if int(part_num) == int(total_parts):
-            badge_label = f"🔥 FINALE: PART {part_num}/{total_parts}"
+    hook_duration = 0.0
+    badge_label = ""
+    if show_top_hook:
+        # Resolve sticker badge text
+        if part_info:
+            part_num = part_info.get("part_number", 1)
+            total_parts = part_info.get("total_parts", 3)
+            badge_label = f"PART {part_num}/{total_parts}"
+        elif sticker_badge and sticker_badge.strip():
+            badge_label = sticker_badge.strip().upper()
         else:
-            badge_label = f"🔗 PART {part_num} OF {total_parts}"
-    elif sticker_badge and sticker_badge.strip():
-        badge_label = sticker_badge.strip().upper()
-    else:
-        badge_label = art["default_badge"]
+            badge_label = ""
 
-    clean_hook = ""
-    if psychological_hook and psychological_hook.strip():
-        raw_hook = psychological_hook.strip().upper().replace('"', '').replace("'", "")
-        clean_hook = censor_demonetized_text(raw_hook)
-        words = clean_hook.split()
-        if len(words) > 6:
-            mid = len(words) // 2
-            clean_hook = " ".join(words[:mid]) + "\\N" + " ".join(words[mid:])
+        clean_hook = ""
+        if psychological_hook and psychological_hook.strip():
+            raw_hook = psychological_hook.strip().upper().replace('"', '').replace("'", "")
+            clean_hook = censor_demonetized_text(raw_hook)
+            words = clean_hook.split()
+            if len(words) > 6:
+                mid = len(words) // 2
+                clean_hook = " ".join(words[:mid]) + "\\N" + " ".join(words[mid:])
+            else:
+                clean_hook = " ".join(words)
+
+        hook_duration = min(3.8, max(2.0, clip_dur * 0.18))
+        t_hook_end = format_ass_time(hook_duration)
+
+        if badge_label and clean_hook:
+            hook_banner_text = f"{{\\c{sticker_accent}}}{badge_label}{{\\c&H00FFFFFF&}} • {clean_hook}"
+        elif clean_hook:
+            hook_banner_text = f"{{\\c&H00FFFFFF&}}{clean_hook}"
+        elif badge_label:
+            hook_banner_text = f"{{\\c{sticker_accent}}}{badge_label}"
         else:
-            clean_hook = " ".join(words)
+            hook_banner_text = ""
 
-    # The hook sticker appears at 0.0s and EXPIRES after 3.8s to 4.2s
-    # It does NOT stay the entire video ("not all of them at once")
-    hook_duration = min(4.2, max(2.5, clip_dur * 0.22))
-    t_hook_end = format_ass_time(hook_duration)
-
-    if clean_hook:
-        hook_banner_text = f"{{\\c{sticker_accent}}}{badge_label}{{\\c&H00FFFFFF&}}  {clean_hook}"
-    else:
-        hook_banner_text = f"{{\\c{sticker_accent}}}{badge_label}{{\\c&H00FFFFFF&}}  MUST WATCH STORY"
-
-    events.insert(0, f"Dialogue: 1,0:00:00.00,{t_hook_end},TopPsychHook,,0,0,0,,{hook_banner_text}")
+        if hook_banner_text:
+            events.insert(0, f"Dialogue: 1,0:00:00.00,{t_hook_end},TopPsychHook,,0,0,0,,{hook_banner_text}")
 
     # 3. Add Subscriber Conversion CTA Banner (Sequential Timing: Final 3.0 seconds ONLY)
     cta_duration = min(3.0, clip_dur * 0.25)

@@ -151,10 +151,15 @@
         </button>
 
         <!-- Layout Selector Pill -->
-        <select id="clipLayout" class="bg-zinc-900/90 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-300 focus:outline-none">
-          <option value="auto" selected>📱 Phone Adaptive (Full Video, Unified Frame)</option>
-          <option value="blur_stack">Blur Stack (Ambient Fill)</option>
-          <option value="center_crop">Center Crop (Full Height)</option>
+        <select id="clipLayout" class="bg-zinc-900/90 border border-purple-500/50 rounded-xl px-3 py-1.5 text-xs font-bold text-purple-200 focus:outline-none cursor-pointer">
+          <option value="center_crop" selected>📱 Smart Full-Screen 9:16 (Recommended • Fills Screen)</option>
+          <option value="blur_stack">🪟 Studio Blur Stack (Centered 16:9 with Ambient Blur)</option>
+        </select>
+
+        <!-- Top Header Text Banner Toggle -->
+        <select id="toggleTopHeader" class="bg-zinc-900/90 border border-zinc-700/80 rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-300 focus:outline-none cursor-pointer">
+          <option value="off" selected>🚫 Top Header: OFF (Clean Video)</option>
+          <option value="on">🏷️ Top Header: ON (Sleek Title Overlay)</option>
         </select>
 
         <!-- Count Selector Pill (Capped at 3 clips for lightning-fast rendering) -->
@@ -1763,7 +1768,8 @@ async function renderSingleClip(i) {
   const clip = reviewClips[i];
   if (!clip) return;
 
-  const layout = document.getElementById('clipLayout')?.value || 'auto';
+  const layout = document.getElementById('clipLayout')?.value || 'center_crop';
+  const showTopHook = document.getElementById('toggleTopHeader')?.value === 'on';
   clip.status = 'rendering';
   clip.error = null;
   renderReviewBoard();
@@ -1777,7 +1783,8 @@ async function renderSingleClip(i) {
         start_seconds: clip.start_seconds !== undefined ? clip.start_seconds : clip.start,
         end_seconds: clip.end_seconds !== undefined ? clip.end_seconds : clip.end,
         layout: layout,
-        recommended_layout: currentAnalysis?.recommended_layout || 'auto',
+        show_top_hook: showTopHook,
+        recommended_layout: currentAnalysis?.recommended_layout || 'center_crop',
         video_type: currentAnalysis?.video_type || 'solo_creator',
         title: clip.suggested_title || clip.title || 'Viral Clip #shorts',
         thumbnail_hook_3words: clip.thumbnail_hook_3words,
@@ -2180,14 +2187,14 @@ function renderReviewBoard() {
         ` : ''}
       </div>
 
-      <!-- Psychological Curiosity Hook (Top Safe-Zone Banner - First 4s Only) -->
+      <!-- Psychological Curiosity Hook (Concept & Angle) -->
       <div class="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/40 text-xs space-y-1">
         <div class="flex items-center justify-between text-[11px] font-bold text-purple-300">
-          <span class="flex items-center gap-1"><span>🧠</span> Opening Hook Sticker:</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-700">0.0s - 4.0s Window</span>
+          <span class="flex items-center gap-1"><span>🧠</span> Hook Concept & Angle:</span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-200 border border-purple-700">Virality Trigger</span>
         </div>
         <div class="text-white font-extrabold italic text-xs leading-snug">
-          "${clip.psychological_hook || "He didn't mean to say this out loud..."}"
+          "${clip.psychological_hook || "High Curiosity Epiphany"}"
         </div>
       </div>
 
