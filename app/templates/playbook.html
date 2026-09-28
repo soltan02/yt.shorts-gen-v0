@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Shorts Algorithm Playbook — ViralClip AI Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-10 max-w-5xl mx-auto pb-16">
+
+  <!-- Hero Header -->
+  <div class="relative overflow-hidden p-8 rounded-3xl bg-gradient-to-br from-purple-950/60 via-zinc-900 to-zinc-950 border border-purple-500/30 shadow-2xl space-y-4">
+    <div class="absolute -right-16 -top-16 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="flex items-center gap-3">
+      <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-black border border-purple-500/40 uppercase tracking-widest">
+        Official Master Guide
+      </span>
+      <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/40">
+        Updated for 2026 Algorithm
+      </span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
+      The YouTube Shorts Algorithm Playbook
+    </h1>
+    <p class="text-base text-zinc-300 max-w-3xl leading-relaxed">
+      Why test videos get stuck at 1,500 views with 0 subscribers, how the Shorts recommendation engine actually evaluates clips, and the exact blueprint to build a 1,000-subscriber monetized channel.
+    </p>
+  </div>
+
+  <!-- Section 1: The 1,500 Views Test Jail Deconstructed -->
+  <div class="glass p-8 rounded-3xl border border-zinc-800 space-y-6">
+    <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-4">
+      <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl">
+        🛑
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">1. The 1,500 Views "Test Jail" & Why You Got 0 Subs</h2>
+        <p class="text-xs text-zinc-400 mt-0.5">Understanding the exact mechanics behind YouTube's initial testing pool.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-amber-400 uppercase tracking-wider">The "Seed" Test Pool</span>
+          <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[11px] font-mono">1,000 – 2,500 Views</span>
+        </div>
+        <p class="text-xs text-zinc-300 leading-relaxed">
+          Every Short published by a new channel is seeded to a random test audience of 1,000 to 2,500 viewers. <strong>Getting 1.6k views is proof that YouTube tested your video!</strong> However, if the retention signals don't cross the threshold, the algorithm cuts off distribution immediately.
+        </p>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-red-400 uppercase tracking-wider">Why 0 Subscribers?</span>
+          <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[11px] font-mono">Passive Swiping</span>
+        </div>
+        <p class="text-xs text-zinc-300 leading-relaxed">
+          Shorts viewers are passive swipers. A single random clip—no matter how clean—will almost <strong>never generate subscribers</strong> unless the channel has an obvious single-niche theme, an unresolved cliffhanger, or a serialized Part 1 / Part 2 loop.
+        </p>
+      </div>
+    </div>
+
+    <!-- The 2 Golden Metrics Table -->
+    <div class="overflow-x-auto rounded-2xl border border-zinc-800">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-zinc-900 text-zinc-400 border-b border-zinc-800">
+          <tr>
+            <th class="px-4 py-3 font-extrabold uppercase">Metric</th>
+            <th class="px-4 py-3 font-extrabold uppercase">Where to Find in YouTube Studio</th>
+            <th class="px-4 py-3 font-extrabold uppercase text-amber-400">Testing Jail Threshold</th>
+            <th class="px-4 py-3 font-extrabold uppercase text-emerald-400">Viral Wave Threshold (50k+)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800/60 bg-zinc-950/40 text-zinc-300">
+          <tr>
+            <td class="px-4 py-3 font-bold text-white">Viewed vs. Swiped Away</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-zinc-400">Analytics &rarr; Reach &rarr; How many chose to view</td>
+            <td class="px-4 py-3 text-red-400 font-semibold">&lt; 70% Viewed (Dead at 1.5k)</td>
+            <td class="px-4 py-3 text-emerald-400 font-extrabold">&ge; 75% &ndash; 82% Viewed</td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 font-bold text-white">Average Percentage Viewed (APV)</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-zinc-400">Analytics &rarr; Engagement &rarr; Avg percentage viewed</td>
+            <td class="px-4 py-3 text-red-400 font-semibold">&lt; 80% (Dropped off early)</td>
+            <td class="px-4 py-3 text-emerald-400 font-extrabold">&ge; 95% &ndash; 115% (Looped)</td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 font-bold text-white">Comment Velocity</td>
+            <td class="px-4 py-3 font-mono text-[11px] text-zinc-400">First 60 minutes after publish</td>
+            <td class="px-4 py-3 text-red-400 font-semibold">0 &ndash; 2 comments</td>
+            <td class="px-4 py-3 text-emerald-400 font-extrabold">&gt; 15 comments (Debate ignited)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 2: Picking a Winning Niche (Channel Purity) -->
+  <div class="glass p-8 rounded-3xl border border-zinc-800 space-y-6">
+    <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-4">
+      <div class="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-xl">
+        🎯
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">2. Channel Direction: Pick ONE Niche & Dominate It</h2>
+        <p class="text-xs text-zinc-400 mt-0.5">Why multi-niche channels get 0 subscribers and how YouTube embeds topic authority.</p>
+      </div>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs leading-relaxed">
+      <strong>⚠️ The Biggest Mistake New Creators Make:</strong> Posting a Joe Rogan fitness clip today, an Elon Musk AI clip tomorrow, and a comedy clip on Friday. YouTube's recommendation engine clusters your channel into a specific semantic vector. If your topics jump around, the algorithm has no idea who to recommend your channel to, and viewers will never subscribe to a chaotic feed.
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Niche 1 -->
+      <div class="p-5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2.5">
+        <div class="text-2xl">🧠</div>
+        <h3 class="text-sm font-black text-white">Dark Psychology & Human Behavior</h3>
+        <p class="text-xs text-zinc-400">The #1 highest retention niche on mobile. Focuses on body language, manipulation signs, and subconscious tricks.</p>
+        <div class="pt-2 text-[11px] text-purple-400 font-semibold">
+          Hook: "3 signs someone is secretly lying right to your face..."
+        </div>
+      </div>
+
+      <!-- Niche 2 -->
+      <div class="p-5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2.5">
+        <div class="text-2xl">💰</div>
+        <h3 class="text-sm font-black text-white">Business, Wealth & 1% Secrets</h3>
+        <p class="text-xs text-zinc-400">Highest CPM in shorts advertising ($4–$8 per 1,000 views). Attracts high-status viewers who subscribe for self-improvement.</p>
+        <div class="pt-2 text-[11px] text-amber-400 font-semibold">
+          Hook: "Why the top 1% never keep money in a bank account..."
+        </div>
+      </div>
+
+      <!-- Niche 3 -->
+      <div class="p-5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2.5">
+        <div class="text-2xl">🚨</div>
+        <h3 class="text-sm font-black text-white">True Crime & Mystery Confessions</h3>
+        <p class="text-xs text-zinc-400">Unmatched curiosity gap. High APV because viewers physically cannot swipe away until they find out what happened.</p>
+        <div class="pt-2 text-[11px] text-red-400 font-semibold">
+          Hook: "When the detective asked this one question, he knew..."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: The 0-to-1,000 Subscribers Playbook -->
+  <div class="glass p-8 rounded-3xl border border-zinc-800 space-y-6">
+    <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-4">
+      <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl">
+        🚀
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">3. The 0-to-1,000 Subscribers Blueprint</h2>
+        <p class="text-xs text-zinc-400 mt-0.5">The three proven psychological conversion triggers that turn swipers into channel subscribers.</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <!-- Strategy 1 -->
+      <div class="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex flex-col sm:flex-row sm:items-start gap-4">
+        <div class="w-8 h-8 rounded-xl bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-sm font-black text-purple-300 shrink-0">
+          1
+        </div>
+        <div class="space-y-1.5 flex-1">
+          <h3 class="text-sm font-extrabold text-white">The "Part 1 / Part 2 Cliffhanger Loop"</h3>
+          <p class="text-xs text-zinc-300 leading-relaxed">
+            Never finish a dramatic story inside a single 45-second clip. End Part 1 right at the climax with our built-in <strong>Multi-Part Series Mode</strong>. Viewers will tap your profile to see Part 2, and seeing multiple related videos causes them to subscribe immediately.
+          </p>
+        </div>
+      </div>
+
+      <!-- Strategy 2 -->
+      <div class="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex flex-col sm:flex-row sm:items-start gap-4">
+        <div class="w-8 h-8 rounded-xl bg-amber-600/30 border border-amber-500/40 flex items-center justify-center text-sm font-black text-amber-300 shrink-0">
+          2
+        </div>
+        <div class="space-y-1.5 flex-1">
+          <h3 class="text-sm font-extrabold text-white">The Pinned Comment Debate Spark</h3>
+          <p class="text-xs text-zinc-300 leading-relaxed">
+            YouTube Shorts weighs <strong>comment velocity</strong> heavier than likes. In our studio, each clip generates a high-conflict pinned comment (e.g. <em>"Do you agree with his perspective, or is he completely wrong? 👇"</em>). When 30 people argue in your comment section, the algorithm blasts the video to 50k+ views.
+          </p>
+        </div>
+      </div>
+
+      <!-- Strategy 3 -->
+      <div class="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex flex-col sm:flex-row sm:items-start gap-4">
+        <div class="w-8 h-8 rounded-xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-sm font-black text-emerald-300 shrink-0">
+          3
+        </div>
+        <div class="space-y-1.5 flex-1">
+          <h3 class="text-sm font-extrabold text-white">The Outro Safe-Zone Subscribe Banner</h3>
+          <p class="text-xs text-zinc-300 leading-relaxed">
+            Never show a subscribe prompt during the first 5 seconds (viewers hate ads and swipe away). Our studio burns the high-contrast <strong>🔔 Subscribe Banner strictly in the final 3.5 seconds</strong> of the clip, capturing the viewer at the emotional peak of the payoff.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Visual Retention Upgrades (Beating Crayo AI) -->
+  <div class="glass p-8 rounded-3xl border border-zinc-800 space-y-6">
+    <div class="flex items-center gap-3 border-b border-zinc-800/80 pb-4">
+      <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xl">
+        ⚡
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">4. Visual Retention: How Our New Engine Beats Crayo</h2>
+        <p class="text-xs text-zinc-400 mt-0.5">The exact production upgrades now active in ViralClip AI Studio.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2">
+        <span class="text-emerald-400 font-extrabold block">🎮 Split-Screen Gaming Mode</span>
+        <p class="text-zinc-300">Podcast speaker on top ($1080	imes960$), high-retention gameplay (Subway Surfers, Minecraft, GTA) on bottom. Prevents visual drop-off on mobile screens.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2">
+        <span class="text-purple-400 font-extrabold block">🎵 Background Music Ducking</span>
+        <p class="text-zinc-300">Trending royalty-free tracks (Phonk, Suspense, Lo-Fi) mixed at $-18	ext{dB}$ beneath speech. Turns plain talking into a cinematic experience.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2">
+        <span class="text-amber-400 font-extrabold block">⚡ Dynamic Kinetic Punch-Zoom</span>
+        <p class="text-zinc-300">Automatic $+12\%$ punch-in alternating every 3 seconds. Kills viewer eye fatigue and drives completion past $90\%$.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2">
+        <span class="text-teal-400 font-extrabold block">💥 Per-Word Elastic Subtitle Bounce</span>
+        <p class="text-zinc-300">Active words bounce dynamically in scale ($120\% ightarrow 100\%$) on entrance with high-contrast highlight colors.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: The 14-Day Consistency Protocol -->
+  <div class="glass p-8 rounded-3xl border border-zinc-800 space-y-4">
+    <h2 class="text-xl font-black text-white flex items-center gap-2">
+      <span>📅 The 14-Day Consistency Protocol</span>
+    </h2>
+    <p class="text-xs text-zinc-300 leading-relaxed">
+      YouTube's AI takes <strong>10 to 14 consecutive days of scheduled posting</strong> to map your audience demographic. Here is your daily routine:
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+      <div class="p-4 rounded-xl bg-zinc-900/90 border border-zinc-800 text-center space-y-1">
+        <span class="text-xs font-black text-purple-400 uppercase">Slot 1 &bull; 12:00 PM EST</span>
+        <div class="text-sm font-extrabold text-white">Lunch Break Feed</div>
+        <p class="text-[11px] text-zinc-400">Peak mobile phone usage in US/EU.</p>
+      </div>
+      <div class="p-4 rounded-xl bg-zinc-900/90 border border-zinc-800 text-center space-y-1">
+        <span class="text-xs font-black text-amber-400 uppercase">Slot 2 &bull; 4:00 PM EST</span>
+        <div class="text-sm font-extrabold text-white">School/Work Commute</div>
+        <p class="text-[11px] text-zinc-400">Highest daily swipe volume window.</p>
+      </div>
+      <div class="p-4 rounded-xl bg-zinc-900/90 border border-zinc-800 text-center space-y-1">
+        <span class="text-xs font-black text-emerald-400 uppercase">Slot 3 &bull; 8:00 PM EST</span>
+        <div class="text-sm font-extrabold text-white">Prime Time Evening</div>
+        <p class="text-[11px] text-zinc-400">Longest watch sessions & comment debates.</p>
+      </div>
+    </div>
+
+    <div class="pt-4 text-center">
+      <a href="/studio" class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white font-black text-sm shadow-xl shadow-purple-600/30 transition-all cursor-pointer">
+        <span>🚀 Open Studio & Create Your Next Viral Short</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

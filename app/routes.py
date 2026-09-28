@@ -190,6 +190,13 @@ def analytics():
         active_tab='analytics'
     )
 
+@main_bp.route('/playbook')
+def playbook():
+    return render_template(
+        'playbook.html',
+        active_tab='playbook'
+    )
+
 @main_bp.route('/settings')
 def settings_page():
     settings = tracker.get_settings()
@@ -465,13 +472,16 @@ def api_render_clip():
 
     try:
         cached = video_cache.get(video_id, {})
-        # Auto-resolve layout: default to Smart Full-Screen 9:16 (center_crop)
+        # Auto-resolve layout: supports center_crop, split_gaming, blur_stack
         if not layout or layout == 'auto':
             rec = data.get('recommended_layout') or cached.get('recommended_layout')
-            layout = rec if rec in ('center_crop', 'blur_stack') else 'center_crop'
-        if layout not in ('center_crop', 'blur_stack'):
+            layout = rec if rec in ('center_crop', 'split_gaming', 'split_screen', 'blur_stack') else 'center_crop'
+        if layout not in ('center_crop', 'split_gaming', 'split_screen', 'blur_stack'):
             layout = 'center_crop'
 
+        background_music = data.get('background_music')
+        gameplay_track = data.get('gameplay_track')
+        enable_kinetic_zoom = bool(data.get('enable_kinetic_zoom', True))
         show_top_hook = bool(data.get('show_top_hook', False))
 
         if not caption_art_direction or caption_art_direction == 'auto':
@@ -548,7 +558,10 @@ def api_render_clip():
             output_video_path=output_path,
             layout=layout,
             subtitle_ass_path=sub_path,
-            video_type=video_type
+            video_type=video_type,
+            enable_kinetic_zoom=enable_kinetic_zoom,
+            background_music=background_music,
+            gameplay_track=gameplay_track
         )
 
         # 5. Generate high-CTR viral 9:16 thumbnail using Gemini hook text

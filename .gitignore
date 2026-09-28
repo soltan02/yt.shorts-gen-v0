@@ -27,6 +27,8 @@ database.json
 # Storage contents (Private user data, downloads, tokens & DB)
 storage/downloads/*
 storage/processed/*
+storage/gameplay/*
+storage/music/*
 storage/*.mp4
 storage/*.jpg
 storage/*.wav
@@ -44,6 +46,8 @@ storage/database.json
 # Keep storage folder structure
 !storage/.gitkeep
 !storage/README.md
+!storage/gameplay/.gitkeep
+!storage/music/.gitkeep
 
 # IDE & Editor files
 .vscode/

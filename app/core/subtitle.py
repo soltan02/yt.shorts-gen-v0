@@ -294,10 +294,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 new_words.append(w)
         words = new_words
 
-        # Apply Highlight Coloring (Selective emphasis - Master Instructions Rule 8)
+        # Apply Kinetic Highlight Coloring with Elastic Scale Bounce
         if hl_word and any(hl_word in w for w in words):
             matched_idx = next(i for i, w in enumerate(words) if hl_word in w)
-            words[matched_idx] = f"{{\\c{hl_color}}}{words[matched_idx]}{{\\r\\c&H00FFFFFF&}}"
+            words[matched_idx] = f"{{\\t(0,90,\\fscx120\\fscy120)\\t(90,190,\\fscx100\\fscy100)\\c{hl_color}}}{words[matched_idx]}{{\\r\\c&H00FFFFFF&}}"
             formatted_text = " ".join(words)
         else:
             # Clean modern white caption style without over-saturating neutral words

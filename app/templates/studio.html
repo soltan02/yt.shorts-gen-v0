@@ -26,226 +26,197 @@
     </div>
   </div>
 
-  <!-- 🧠 24h Viral Trend Intelligence Bot Panel -->
-  <div class="glass p-5 rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-zinc-900 to-zinc-950 space-y-3">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  <!-- Collapsible AI Director & Trend Intelligence Drawer -->
+  <div class="glass rounded-2xl border border-purple-500/30 overflow-hidden shadow-lg">
+    <button 
+      type="button" 
+      onclick="toggleAiIntelligenceDrawer()" 
+      class="w-full p-4 flex items-center justify-between text-left hover:bg-zinc-900/60 transition-all cursor-pointer"
+    >
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-xl shadow-inner">
-          🧠
-        </div>
+        <span class="w-8 h-8 rounded-xl bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-base shadow-inner">🧠</span>
         <div>
           <div class="flex items-center gap-2">
-            <h2 class="text-sm font-extrabold text-white">24H Viral Trend Intelligence Bot</h2>
-            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30 animate-pulse">● Active (24h Autopilot)</span>
+            <span class="text-xs font-black text-white">AI Director & 24H Trend Intelligence</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30 animate-pulse">● Active Autopilot</span>
           </div>
-          <p class="text-xs text-zinc-400 mt-0.5">Captures famous viral shorts daily, extracts winning hooks & structures, and implements them on every generation.</p>
+          <p class="text-[11px] text-zinc-400 mt-0.5">Learns formulas from 1M+ viral benchmarks & optimizes hooks, formats, and retention.</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
+        <span id="intelDrawerState" class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] font-bold text-purple-300">Show Insights ▾</span>
+      </div>
+    </button>
+    
+    <div id="aiIntelligenceDrawer" class="hidden p-5 pt-0 space-y-3 border-t border-zinc-800/80 mt-2">
+      <div class="flex items-center justify-between gap-3 pt-2">
+        <span class="text-xs font-bold text-zinc-300">24H Trend Bot Insights & Style Decisions:</span>
         <button 
           id="btnScanTrends" 
           onclick="triggerTrendScan()" 
-          class="px-3.5 py-2 rounded-xl bg-purple-900/60 hover:bg-purple-800 border border-purple-500/40 text-xs font-bold text-purple-200 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+          class="px-3 py-1.5 rounded-lg bg-purple-900/60 hover:bg-purple-800 border border-purple-500/40 text-xs font-bold text-purple-200 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
         >
           <span>⚡ Scan & Learn Now</span>
         </button>
       </div>
-    </div>
-    <div id="trendBotInsightsBar" class="pt-2 border-t border-zinc-800/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-      <div class="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-300">
-        <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">🔥 Active Hook Archetype</span>
-        <span id="trendHookText" class="truncate block font-semibold text-white mt-0.5">The Negative Confession ("He didn't mean to say this...")</span>
+      <div id="trendBotInsightsBar" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+        <div class="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-300">
+          <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">🔥 Active Hook Archetype</span>
+          <span id="trendHookText" class="truncate block font-semibold text-white mt-0.5">The Negative Confession</span>
+        </div>
+        <div class="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-300">
+          <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">⚡ Top Sticker Formula</span>
+          <span id="trendStickerText" class="truncate block font-semibold text-white mt-0.5">[WAIT FOR IT] • [EXPOSED]</span>
+        </div>
+        <div class="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-300">
+          <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">📊 Intelligence Status</span>
+          <span id="trendStatusText" class="truncate block font-semibold text-emerald-400 mt-0.5">Learned from 15+ Trending Shorts</span>
+        </div>
       </div>
-      <div class="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-300">
-        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">⚡ Top Sticker Formula</span>
-        <span id="trendStickerText" class="truncate block font-semibold text-white mt-0.5">[WAIT FOR IT] • [EXPOSED] • [MUST WATCH]</span>
-      </div>
-      <div class="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-300">
-        <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">📊 Intelligence Status</span>
-        <span id="trendStatusText" class="truncate block font-semibold text-emerald-400 mt-0.5">Learned from 15+ Trending Shorts • Synced</span>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-zinc-800/80 text-xs">
+        <div class="p-2 rounded-lg bg-zinc-900/80 border border-zinc-800">
+          <span class="text-[10px] font-bold text-zinc-400 uppercase block">🎯 Detected Niche</span>
+          <span id="directorNicheText" class="font-black text-white truncate block text-xs">🤖 Auto-Detecting...</span>
+        </div>
+        <div class="p-2 rounded-lg bg-zinc-900/80 border border-zinc-800">
+          <span class="text-[10px] font-bold text-amber-400 uppercase block">⚡ Clip Mode</span>
+          <span id="directorModeText" class="font-black text-amber-200 truncate block text-xs">🤖 Auto Mode</span>
+        </div>
+        <div class="p-2 rounded-lg bg-zinc-900/80 border border-zinc-800">
+          <span class="text-[10px] font-bold text-purple-400 uppercase block">🎨 Caption Palette</span>
+          <span id="directorArtText" class="font-black text-purple-200 truncate block text-xs">✨ Adaptive Multi-Style</span>
+        </div>
+        <div class="p-2 rounded-lg bg-zinc-900/80 border border-zinc-800">
+          <span class="text-[10px] font-bold text-teal-400 uppercase block">📱 Framing</span>
+          <span id="directorLayoutText" class="font-black text-teal-200 truncate block text-xs">📱 Phone-Adaptive 9:16</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Input Form Card -->
+  <!-- Streamlined Input & Generation Form -->
   <div class="glass p-6 rounded-2xl shadow-xl space-y-4">
-    <!-- Top Row: URL, Layout, Niche, Mode, Clips Count & Primary Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-      <div class="md:col-span-5 relative">
+    <!-- Row 1: URL input & Primary Action Buttons -->
+    <div class="flex flex-col sm:flex-row items-center gap-3">
+      <div class="relative flex-1 w-full">
         <input 
           type="text" 
           id="ytUrl" 
           placeholder="Paste YouTube Video URL (e.g. https://www.youtube.com/watch?v=...)"
-          class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-inner"
         />
       </div>
-
-      <div class="md:col-span-3">
-        <select id="nicheSelector" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-3 py-3 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-          <option value="auto" selected>🤖 Auto-Detect Niche (AI Director)</option>
-          <option value="storytelling_crime">🎭 Storytelling & Mystery</option>
-          <option value="business_money">💼 Business & Wealth Secrets</option>
-          <option value="psychology_secrets">🧠 Dark Psychology & Tricks</option>
-          <option value="tech_ai">🤖 Tech & AI Breakthroughs</option>
-          <option value="motivation_mindset">⚡ Motivation & Mindset</option>
-          <option value="entertainment_drama">🎙️ Wild Stories & Drama</option>
-        </select>
-      </div>
-
-      <div class="md:col-span-2">
-        <select id="clipModeSelector" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-2.5 py-3 text-xs font-semibold text-amber-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
-          <option value="auto" selected>🤖 Auto Clip Mode</option>
-          <option value="standalone">⚡ Standalone Shorts</option>
-          <option value="multipart_series">🔗 3-Part Series (Story)</option>
-        </select>
-      </div>
-
-      <div class="md:col-span-2 flex gap-2">
+      <div class="flex items-center gap-2 w-full sm:w-auto">
         <button 
           id="btnAnalyze"
           onclick="analyzeVideo()"
-          class="flex-1 px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 font-extrabold text-xs text-white shadow-lg shadow-purple-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          class="flex-1 sm:flex-initial px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 font-extrabold text-sm text-white shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
         >
           <span>⚡ Find Clips</span>
         </button>
-
         <button 
           id="btnAutopilot"
           onclick="runAutopilot()"
           title="1-Click Autopilot Publish"
-          class="px-3.5 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-amber-500 hover:from-pink-500 hover:to-amber-400 font-black text-xs text-white shadow-lg shadow-pink-600/30 flex items-center justify-center transition-all cursor-pointer"
+          class="px-4 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-amber-500 hover:from-pink-500 hover:to-amber-400 font-black text-sm text-white shadow-lg shadow-pink-600/30 flex items-center justify-center transition-all cursor-pointer shrink-0"
         >
           <span>🚀</span>
         </button>
       </div>
     </div>
 
-    <!-- Second Row: Secondary Controls, Video Scout Bot & Viral Potential Pre-Scan Audit Trigger -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-zinc-800/80">
-      <div class="flex flex-wrap items-center gap-2">
-        <!-- Scout 3 Videos Button -->
-        <button 
-          id="btnOpenScout"
-          onclick="openScoutModal()"
-          class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-900/80 to-indigo-900/80 hover:from-purple-800 hover:to-indigo-800 border border-purple-500/50 text-xs font-black text-purple-200 hover:text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-        >
-          <span>🔍 Scout 3 Viral Videos (Bot)</span>
-        </button>
-
-        <!-- Pre-Scan Audit Trigger Button -->
-        <button 
-          id="btnToggleAudit"
-          onclick="toggleAuditPanel()"
-          class="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-teal-500/40 text-xs font-black text-teal-300 hover:text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-        >
-          <span>🧪 Pre-Scan Viral Audit</span>
-        </button>
-
-        <!-- Channel Analyzer (1M+ Views) Button -->
-        <button 
-          id="btnOpenChannelAnalyzer"
-          onclick="openChannelAnalyzerModal()"
-          class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-900/80 to-yellow-900/80 hover:from-amber-800 hover:to-yellow-800 border border-amber-500/50 text-xs font-black text-amber-200 hover:text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-        >
-          <span>🏆 Channel Analyzer (1M+ Views)</span>
-        </button>
-
-        <!-- Layout Selector Pill -->
-        <select id="clipLayout" class="bg-zinc-900/90 border border-purple-500/50 rounded-xl px-3 py-1.5 text-xs font-bold text-purple-200 focus:outline-none cursor-pointer">
-          <option value="center_crop" selected>📱 Smart Full-Screen 9:16 (Recommended • Fills Screen)</option>
-          <option value="blur_stack">🪟 Studio Blur Stack (Centered 16:9 with Ambient Blur)</option>
-        </select>
-
-        <!-- Top Header Text Banner Toggle -->
-        <select id="toggleTopHeader" class="bg-zinc-900/90 border border-zinc-700/80 rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-300 focus:outline-none cursor-pointer">
-          <option value="off" selected>🚫 Top Header: OFF (Clean Video)</option>
-          <option value="on">🏷️ Top Header: ON (Sleek Title Overlay)</option>
-        </select>
-
-        <!-- Count Selector Pill (Capped at 3 clips for lightning-fast rendering) -->
-        <select id="numClips" class="bg-zinc-900/90 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none">
-          <option value="1">1 Clip (Ultra Fast)</option>
-          <option value="2">2 Clips</option>
-          <option value="3" selected>3 Clips (Max Speed & Quality)</option>
+    <!-- Row 2: Visual Style & Production Controls -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+      <!-- Layout Framing Selector -->
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">📱 Layout Framing</label>
+        <select id="clipLayout" onchange="toggleGameplaySelector(this.value)" class="w-full bg-zinc-900 border border-purple-500/50 rounded-xl px-3 py-2 text-xs font-bold text-purple-200 focus:outline-none cursor-pointer">
+          <option value="center_crop" selected>📱 Full-Screen 9:16 (Recommended)</option>
+          <option value="split_gaming">🎮 Split-Screen Gaming (Gameplay Loop)</option>
+          <option value="blur_stack">🪟 Studio Blur Stack (Centered 16:9)</option>
         </select>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 text-[11px] text-zinc-400">
-        <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Multi-Part Cliffhangers</span>
-        <span class="flex items-center gap-1"><span class="text-amber-400">✓</span> Subscriber CTA Banners</span>
-        <span class="flex items-center gap-1"><span class="text-purple-400">✓</span> 1,000 Sub Accelerator</span>
+      <!-- Background Music Selector -->
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">🎵 Background Music</label>
+        <select id="bgmSelector" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-200 focus:outline-none cursor-pointer">
+          <option value="none" selected>🚫 None (Clean Dialogue)</option>
+          <option value="phonk">⚡ Dark Phonk (High Energy)</option>
+          <option value="suspense">🚨 Suspense / Mystery (Crime/Drama)</option>
+          <option value="lofi">☕ Lo-Fi Growth (Business/Podcast)</option>
+          <option value="epic">🔥 Epic Riser (Inspirational)</option>
+        </select>
+      </div>
+
+      <!-- Target Niche Selector -->
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">🎯 Channel Niche</label>
+        <select id="nicheSelector" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none cursor-pointer">
+          <option value="auto" selected>🤖 Auto-Detect (AI Director)</option>
+          <option value="psychology_secrets">🧠 Dark Psychology & Behavior</option>
+          <option value="business_money">💼 Business & Wealth Secrets</option>
+          <option value="storytelling_crime">🚨 True Crime & Mystery</option>
+          <option value="tech_ai">🤖 Tech & AI Breakthroughs</option>
+          <option value="motivation_mindset">⚡ Motivation & Mindset</option>
+        </select>
+      </div>
+
+      <!-- Clip Mode & Count -->
+      <div class="space-y-1">
+        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">🔗 Mode & Yield</label>
+        <div class="flex gap-2">
+          <select id="clipModeSelector" class="flex-1 bg-zinc-900 border border-zinc-700/80 rounded-xl px-2.5 py-2 text-xs font-semibold text-amber-300 focus:outline-none cursor-pointer">
+            <option value="auto" selected>🤖 Auto Mode</option>
+            <option value="standalone">⚡ Standalone</option>
+            <option value="multipart_series">🔗 3-Part Series</option>
+          </select>
+          <select id="numClips" class="w-20 bg-zinc-900 border border-zinc-700/80 rounded-xl px-2 py-2 text-xs text-zinc-300 focus:outline-none">
+            <option value="1">1 Clip</option>
+            <option value="2">2 Clips</option>
+            <option value="3" selected>3 Clips</option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <!-- 🤖 Autonomous AI Director Real-Time Intelligence Card -->
-    <div id="aiDirectorBanner" class="p-4 rounded-xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-zinc-900 border border-purple-500/40 space-y-2.5 transition-all">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600/40 to-indigo-600/40 border border-purple-500/50 flex items-center justify-center text-base shadow-inner">
-            🤖
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-white">Autonomous AI Director</span>
-              <span id="directorStatusBadge" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Viral Clips Bot Intelligence (1M+ Benchmarks)</span>
-              </span>
-            </div>
-            <p class="text-[11px] text-zinc-400 mt-0.5">Autonomous styling: Learns formats exclusively from 1M+ viral clipping channels and Trend Bot intelligence. (Personal channel excluded from reference).</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button 
-            type="button"
-            onclick="researchOnlineTrendsNow()"
-            id="btnResearchTrends"
-            class="px-2.5 py-1 rounded-lg bg-blue-900/50 hover:bg-blue-800/80 border border-blue-500/40 text-[11px] font-bold text-blue-200 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-            title="Triggers Trend Research Bot to crawl viral Shorts formats & update style playbook"
-          >
-            <span>📡 Research Trends</span>
-          </button>
-          <button 
-            type="button"
-            onclick="syncViralBotLearning()"
-            id="btnSyncPerf"
-            class="px-2.5 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/80 border border-purple-500/40 text-[11px] font-bold text-purple-200 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-            title="Syncs style weights directly with Viral Trend Bot and 1M+ benchmark creators"
-          >
-            <span>🤖 Sync Viral Bot</span>
-          </button>
-          <span id="directorHistoryBadge" class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] font-semibold text-purple-300">
-            🤖 Reference: Viral Clips Bot (1M+ Benchmarks)
-          </span>
-        </div>
+    <!-- Dynamic Gameplay Track Row (Visible only if split_gaming is selected) -->
+    <div id="gameplayTrackRow" class="hidden p-3 rounded-xl bg-purple-950/40 border border-purple-500/40 flex items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-base">🎮</span>
+        <span class="font-bold text-purple-200">Active Gameplay Track:</span>
+        <select id="gameplayTrackSelector" class="bg-zinc-900 border border-purple-500/50 rounded-lg px-2.5 py-1 text-xs text-purple-300 font-semibold focus:outline-none">
+          <option value="minecraft_parkour" selected>⛏️ Minecraft Parkour</option>
+          <option value="subway_surfers">🏃 Subway Surfers</option>
+          <option value="gta_stunts">🏎️ GTA V Mega Ramp Stunts</option>
+        </select>
+      </div>
+      <span class="text-[11px] text-zinc-400">Bottom 50% split screen</span>
+    </div>
+
+    <!-- Secondary Tools Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/80 text-xs">
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="openScoutModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-300 hover:text-white font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer">
+          <span>🔍 Scout Videos</span>
+        </button>
+        <button type="button" onclick="toggleAuditPanel()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-teal-500/40 text-teal-300 hover:text-white font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer">
+          <span>🧪 Viral Audit</span>
+        </button>
+        <button type="button" onclick="openChannelAnalyzerModal()" class="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-amber-500/40 text-amber-300 hover:text-white font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer">
+          <span>🏆 1M+ Analyzer</span>
+        </button>
       </div>
 
-      <!-- 4-Slot Auto-Decision Grid -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-zinc-800/80 text-xs">
-        <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/90 space-y-0.5">
-          <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">🎯 Detected Niche</span>
-          <span id="directorNicheText" class="font-black text-white truncate block text-xs">🤖 Auto-Detecting...</span>
-        </div>
-        <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/90 space-y-0.5">
-          <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">⚡ Clip Mode</span>
-          <span id="directorModeText" class="font-black text-amber-200 truncate block text-xs">🤖 Auto (Story vs Shorts)</span>
-        </div>
-        <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/90 space-y-0.5">
-          <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">🎨 Caption Art Direction</span>
-          <span id="directorArtText" class="font-black text-purple-200 truncate block text-xs">✨ Adaptive Multi-Style Palette</span>
-        </div>
-        <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/90 space-y-0.5">
-          <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">📱 Phone Framing</span>
-          <span id="directorLayoutText" class="font-black text-teal-200 truncate block text-xs">📱 Phone-Adaptive (No Zoom)</span>
-        </div>
-      </div>
-
-      <!-- Live Rationale Box -->
-      <div id="directorRationaleBox" class="p-2.5 rounded-xl bg-purple-950/20 border border-purple-900/40 text-[11px] text-purple-200/90 flex items-start gap-2">
-        <span class="shrink-0 text-xs">💡</span>
-        <span id="directorReasonText" class="leading-relaxed">
-          Paste any YouTube link above. The AI Director will automatically prescan dialogue, determine speaker arrangements, match emotional art direction, and adapt choices based on 1M+ viral clipping benchmarks and the Viral Trend Bot playbook (your personal channel is excluded from reference).
-        </span>
+      <div class="flex items-center gap-2">
+        <select id="toggleTopHeader" class="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-[11px] font-semibold text-zinc-400 focus:outline-none cursor-pointer">
+          <option value="off" selected>🚫 Top Header: OFF (Clean)</option>
+          <option value="on">🏷️ Top Header: ON</option>
+        </select>
+        <select id="toggleKineticZoom" class="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1 text-[11px] font-semibold text-zinc-400 focus:outline-none cursor-pointer">
+          <option value="on" selected>⚡ Kinetic Zoom: ON (3s Rule)</option>
+          <option value="off">Static Frame</option>
+        </select>
       </div>
     </div>
   </div>
@@ -1238,6 +1209,31 @@
 </div>
 
 <script>
+
+// ─── Streamlined UI Helpers ─────────────────────────────────────────────────
+function toggleAiIntelligenceDrawer() {
+  const drawer = document.getElementById('aiIntelligenceDrawer');
+  const label = document.getElementById('intelDrawerState');
+  if (!drawer) return;
+  if (drawer.classList.contains('hidden')) {
+    drawer.classList.remove('hidden');
+    if (label) label.innerText = 'Hide Insights ▴';
+  } else {
+    drawer.classList.add('hidden');
+    if (label) label.innerText = 'Show Insights ▾';
+  }
+}
+
+function toggleGameplaySelector(val) {
+  const row = document.getElementById('gameplayTrackRow');
+  if (!row) return;
+  if (val === 'split_gaming') {
+    row.classList.remove('hidden');
+  } else {
+    row.classList.add('hidden');
+  }
+}
+
 // ─── Clipboard Helper ────────────────────────────────────────────────────────
 function copyToClipboard(encodedText, btnEl) {
   const text = decodeURIComponent(encodedText);
@@ -2198,83 +2194,74 @@ function renderReviewBoard() {
         </div>
       </div>
 
-      <!-- Reel Description with Attention Emojis -->
-      ${clip.suggested_description || clip.description ? `
-        <div class="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-300 space-y-1">
-          <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-            <span>📝</span> Reel Description:
-          </div>
-          <p class="text-zinc-200 text-xs leading-relaxed italic line-clamp-2 select-all">
-            ${clip.suggested_description || clip.description}
-          </p>
-        </div>
-      ` : ''}
-
-      <!-- Cliffhanger Hook (If present) -->
-      ${clip.cliffhanger_hook ? `
-        <div class="p-2 rounded-xl bg-amber-950/20 border border-amber-500/30 text-xs">
-          <div class="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1"><span>🎣</span> Cliffhanger Ending:</div>
-          <div class="italic text-amber-200 line-clamp-2 mt-0.5">"${clip.cliffhanger_hook}"</div>
-        </div>
-      ` : ''}
-
-      <!-- Monetization Subscribe Conversion Banner -->
-      <div class="p-3 rounded-xl bg-gradient-to-r from-red-950/40 via-zinc-900 to-zinc-900 border border-red-500/40 text-xs space-y-1.5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-extrabold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-            <span>🔔</span> <span>Monetization Subscribe Banner:</span>
+      <!-- Collapsible Creator Drawer: Captions, Titles, Comments & Insights -->
+      <details class="group rounded-xl bg-zinc-900/70 border border-zinc-800 p-2.5 transition-all">
+        <summary class="text-xs font-bold text-zinc-400 group-hover:text-zinc-200 cursor-pointer flex items-center justify-between select-none">
+          <span class="flex items-center gap-1.5 text-purple-300">
+            <span>⚙️</span> Creator Tools & Details
           </span>
-          <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-            Outro Safe-Zone (Final 3.5s)
-          </span>
-        </div>
-        <div class="bg-black/60 px-2.5 py-1.5 rounded-lg border border-zinc-800 text-center">
-          <span class="text-xs font-black text-amber-200 tracking-wide">
-            ${clip.subscriber_cta || (clip.part_number && clip.part_number < clip.total_parts ? `🔔 SUBSCRIBE FOR PART ${clip.part_number + 1} 👇` : '🔔 SUBSCRIBE FOR DAILY SECRETS 🚀')}
-          </span>
-        </div>
-      </div>
-
-      <!-- Viral Reaction Comment (Sparks Heated Debates & 100x Comments) -->
-      ${(clip.reaction_spark_comment || clip.pinned_comment) ? `
-        <div class="p-3 rounded-xl bg-gradient-to-br from-emerald-950/40 via-teal-950/20 to-zinc-900 border border-emerald-500/50 text-xs space-y-2 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5 font-black text-emerald-400 text-[11px] uppercase tracking-wide">
-              <span>💬</span>
-              <span>Reaction Spark Comment</span>
-            </div>
-            ${clip.comment_strategy ? `
-              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">
-                ${clip.comment_strategy.replace(/_/g, ' ')}
-              </span>
-            ` : ''}
-          </div>
-          <p class="text-zinc-200 font-semibold text-xs leading-relaxed italic bg-black/50 p-2.5 rounded-lg border border-zinc-800/80 select-all">
-            "${clip.reaction_spark_comment || clip.pinned_comment}"
-          </p>
-          <div class="flex items-center justify-between text-[10px] text-zinc-400 pt-0.5">
-            <span class="flex items-center gap-1 text-emerald-300 font-medium">
-              <span>🔥</span> Pin to spark debate & replies
-            </span>
-            <button 
+          <span class="text-[10px] text-zinc-500 group-open:rotate-180 transition-transform">▾</span>
+        </summary>
+        
+        <div class="space-y-3 pt-3 mt-2 border-t border-zinc-800/80 text-xs">
+          <!-- Quick Tools Buttons: Title Archetypes & Inline Captions -->
+          <div class="grid grid-cols-2 gap-2">
+            <button
               type="button"
-              onclick="copyToClipboard('${encodeURIComponent(clip.reaction_spark_comment || clip.pinned_comment)}', this)" 
-              class="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 hover:text-white text-[11px] font-bold border border-emerald-500/40 shrink-0 cursor-pointer transition-all flex items-center gap-1"
+              onclick="openTitleArchetypesModal(${i})"
+              class="py-2 px-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              title="Switch between 3 High-CTR YouTube Shorts Title Archetypes"
             >
-              <span>📋</span> Copy Comment
+              <span>🏷️ 3 Titles</span>
+            </button>
+            <button
+              type="button"
+              onclick="openCaptionEditorModal(${i})"
+              class="py-2 px-2 rounded-xl bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/40 text-amber-200 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+              title="Inline Caption Quick-Fix Editor"
+            >
+              <span>✏️ Captions</span>
             </button>
           </div>
+
+          <!-- Viral Reaction Comment (Sparks Heated Debates) -->
+          ${(clip.reaction_spark_comment || clip.pinned_comment) ? `
+            <div class="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/40 space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-bold text-emerald-400">
+                <span class="flex items-center gap-1"><span>💬</span> Pinned Debate Comment</span>
+                <button 
+                  type="button"
+                  onclick="copyToClipboard('${encodeURIComponent(clip.reaction_spark_comment || clip.pinned_comment)}', this)" 
+                  class="px-2 py-0.5 rounded bg-emerald-700/50 hover:bg-emerald-600 text-white text-[10px] font-bold cursor-pointer transition"
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="text-zinc-200 text-xs italic bg-black/40 p-2 rounded-lg border border-zinc-800 select-all leading-relaxed">
+                "${clip.reaction_spark_comment || clip.pinned_comment}"
+              </p>
+            </div>
+          ` : ''}
+
+          <!-- Spoken Hook (0-3s) -->
+          <div class="p-2 rounded-xl bg-black/40 border border-zinc-800 text-[11px]">
+            <span class="text-purple-400 font-bold block mb-0.5">⚡ Spoken Hook (0-3s):</span>
+            <span class="text-zinc-300 italic">"${clip.hook_text || 'Extracting...'}"</span>
+          </div>
+
+          <!-- Description Preview -->
+          ${clip.suggested_description || clip.description ? `
+            <div class="p-2 rounded-xl bg-black/40 border border-zinc-800 text-[11px]">
+              <span class="text-zinc-400 font-bold block mb-0.5">📝 Description:</span>
+              <p class="text-zinc-300 italic line-clamp-2 select-all">${clip.suggested_description || clip.description}</p>
+            </div>
+          ` : ''}
+          
+          <!-- Virality Reason -->
+          ${clip.virality_reason ? `<p class="text-[10px] text-zinc-500 leading-normal">${clip.virality_reason}</p>` : ''}
         </div>
-      ` : ''}
-
-      <!-- Hook Transcript (First 3s) -->
-      <div class="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
-        <div class="text-purple-400 font-semibold mb-0.5">⚡ Spoken Hook (0-3s):</div>
-        <div class="italic text-zinc-200 line-clamp-2">"${clip.hook_text || 'Extracting...'}"</div>
-      </div>
-
-      <!-- Virality Reason -->
-      <p class="text-[11px] text-zinc-500 line-clamp-2">${clip.virality_reason || ''}</p>
+      </details>
+      
 
       <!-- Action Buttons -->
       <div class="grid grid-cols-2 gap-2">
@@ -2315,26 +2302,7 @@ function renderReviewBoard() {
         </button>
       `}
 
-      <!-- Creator Quick Tools: Title Archetypes & Inline Captions -->
-      <div class="grid grid-cols-2 gap-2 pt-1">
-        <button
-          type="button"
-          onclick="openTitleArchetypesModal(${i})"
-          class="py-2 px-2 rounded-xl bg-purple-950/50 hover:bg-purple-900/70 border border-purple-500/40 text-purple-200 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-          title="Switch between 3 High-CTR YouTube Shorts Title Archetypes"
-        >
-          <span>🏷️ 3 Title Archetypes</span>
-        </button>
-        <button
-          type="button"
-          onclick="openCaptionEditorModal(${i})"
-          class="py-2 px-2 rounded-xl bg-amber-950/50 hover:bg-amber-900/70 border border-amber-500/40 text-amber-200 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-          title="Inline Caption Quick-Fix Editor"
-        >
-          <span>✏️ Edit Captions</span>
-        </button>
-      </div>
-    `;
+      `;
     grid.appendChild(card);
   });
 }
