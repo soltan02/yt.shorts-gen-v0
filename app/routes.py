@@ -388,13 +388,15 @@ def api_analyze():
         # Resilient recovery: return non-overlapping distinct heuristic fallback clips across timeline
         try:
             dur = float(meta.get("duration", 300.0)) if ('meta' in locals() and meta and meta.get("duration")) else 300.0
-            step = max(40.0, dur / (num_clips + 1))
-            syn_transcript = [
-                {"start": float(i * step + 15.0), "duration": 35.0, "text": f"Critical viral moment #{i+1}"}
-                for i in range(num_clips + 2)
-            ]
+            real_t = transcript_data if ('transcript_data' in locals() and transcript_data) else []
+            if not real_t:
+                try:
+                    real_t, _ = get_transcript(video_id)
+                except Exception:
+                    real_t = []
+
             emergency_analysis = analyze_viral_clips(
-                transcript=syn_transcript,
+                transcript=real_t,
                 video_title=meta.get("title", f"Video {video_id}") if ('meta' in locals() and meta) else f"Video {video_id}",
                 api_key="forced_fallback",
                 num_clips=num_clips,
@@ -404,8 +406,20 @@ def api_analyze():
             )
             em_clips = emergency_analysis.get("clips", [])
             if em_clips:
-                em_meta = {"video_id": video_id, "title": f"YouTube Video ({video_id})", "thumbnail": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg", "duration": 300, "channel": "YouTube"}
-                video_cache[video_id] = {"metadata": em_meta, "transcript": [], "clips": em_clips, "video_type": "solo_creator", "recommended_layout": "auto"}
+                em_meta = meta if ('meta' in locals() and meta) else {
+                    "video_id": video_id, 
+                    "title": f"YouTube Video ({video_id})", 
+                    "thumbnail": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg", 
+                    "duration": dur, 
+                    "channel": "YouTube"
+                }
+                video_cache[video_id] = {
+                    "metadata": em_meta, 
+                    "transcript": real_t, 
+                    "clips": em_clips, 
+                    "video_type": "solo_creator", 
+                    "recommended_layout": "auto"
+                }
                 return jsonify({
                     "success": True,
                     "metadata": em_meta,
@@ -575,7 +589,8 @@ def api_render_clip():
                 output_thumb_path=thumb_path, 
                 hook_title=thumb_hook,
                 color_theme=thumb_color,
-                badge_text=badge_thumb
+                badge_text=badge_thumb,
+                prompt=thumb_prompt
             )
         except Exception as e:
             print(f"[Thumbnail Error] {e}")
@@ -893,7 +908,8 @@ def api_autopilot():
             output_thumb_path=thumb_path, 
             hook_title=thumb_hook,
             color_theme=best_clip.get("thumbnail_color_theme", "yellow_black"),
-            badge_text="⚠️ DON'T MISS THIS"
+            badge_text="⚠️ DON'T MISS THIS",
+            prompt=thumb_prompt
         )
 
         _, active_id, active_ch = get_current_channel_context()

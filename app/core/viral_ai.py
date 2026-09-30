@@ -14,13 +14,15 @@ INCOMPLETE_ENDING_WORDS = {
     # Prepositions
     "to", "of", "in", "for", "on", "with", "at", "by", "from", "up", "about", "into", "over", "after", "through", "under",
     # Articles & determiners
-    "the", "a", "an", "this", "that", "these", "those", "my", "your", "his", "her", "their", "our",
+    "the", "a", "an", "this", "that", "these", "those", "my", "your", "his", "her", "their", "our", "some",
     # Relative pronouns & questions
     "which", "who", "whom", "whose", "what", "where", "when", "why", "how",
     # Auxiliary & linking verbs
     "is", "are", "was", "were", "am", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would", "shall", "should", "can", "could", "may", "might", "must",
-    # Fillers & incomplete transitions
-    "like", "um", "uh", "just", "really", "very", "actually", "also", "then", "if"
+    # Personal Pronouns
+    "he", "she", "they", "them", "it", "we", "you", "i",
+    # Fillers, fragments & incomplete transitions
+    "like", "um", "uh", "just", "really", "very", "actually", "also", "then", "if", "mean", "say", "said", "fade"
 }
 
 SENTENCE_STARTER_WORDS = {
@@ -35,16 +37,16 @@ def snap_to_speech_boundary(
     is_start: bool = False,
     max_drift: float = 6.0,
     current_start: float = 0.0,
-    min_duration: float = 15.0,
-    max_duration: float = 58.5
+    min_duration: float = 18.0,
+    max_duration: float = 58.0
 ) -> float:
     """
     Intelligently snaps clip boundaries to natural spoken sentence and thought boundaries.
     Guarantees:
-      - Never ends mid-speech, mid-word, or on incomplete connectors ('and', 'because', 'which', etc.)
+      - Never ends mid-speech, mid-word, or on incomplete connectors ('and', 'because', 'was', 'of', etc.)
+      - Clamps ending before next spoken phrase begins (zero timestamp bleed into following sentences)
       - Snaps to natural acoustic pauses/silence between phrases
       - Preserves full speaker thoughts and punchlines
-      - Adds a +0.28s vocal decay room tone cushion to prevent audio codec clipping
       - Snaps start to clean sentence openers rather than trailing mid-clause words
     """
     if not transcript:
@@ -69,12 +71,12 @@ def snap_to_speech_boundary(
             first_w = re.sub(r'[^\w]', '', words[0]).lower() if words else ""
 
             penalty = 0.0
-            if first_w in {"and", "but", "or", "because"}:
-                penalty += 8.0
+            if first_w in {"and", "but", "or", "because", "so", "like", "yeah", "uh", "um"}:
+                penalty += 14.0
 
             bonus_starter = 0.0
             if first_w in SENTENCE_STARTER_WORDS or (words and words[0][:1].isupper()):
-                bonus_starter += 4.0
+                bonus_starter += 5.0
 
             bonus_prev = 0.0
             if i > 0:
@@ -82,15 +84,15 @@ def snap_to_speech_boundary(
                 prev_e = float(prev_item.get("start", 0.0)) + float(prev_item.get("duration", 0.0))
                 prev_text = str(prev_item.get("text", "")).strip()
                 if re.search(r'[\.\?\!\…]\s*$', prev_text):
-                    bonus_prev += 5.0
+                    bonus_prev += 6.0
                 gap = s - prev_e
-                if gap >= 0.25:
-                    bonus_prev += 3.5
+                if gap >= 0.20:
+                    bonus_prev += 4.0
 
             score = dist + penalty - bonus_starter - bonus_prev
             if score < best_score:
                 best_score = score
-                best_time = max(0.0, s - 0.15)  # 150ms clean attack pre-roll
+                best_time = max(0.0, s - 0.06)  # 60ms clean attack pre-roll
 
     else:
         # Snap end timestamp to a fully resolved sentence or thought
@@ -114,37 +116,33 @@ def snap_to_speech_boundary(
 
             penalty = 0.0
             if last_w in INCOMPLETE_ENDING_WORDS:
-                penalty += 18.0
+                penalty += 35.0  # Strongly penalize dangling connector endings
 
             has_terminal = bool(re.search(r'[\.\?\!\…]\s*$', text))
-            bonus_terminal = 6.0 if has_terminal else 0.0
+            bonus_terminal = 8.0 if has_terminal else 0.0
+
+            # Find when the next spoken phrase starts across the entire transcript
+            next_starts = [float(other.get("start", 0)) for other in transcript if float(other.get("start", 0)) >= e - 0.08]
+            next_s = min(next_starts) if next_starts else e + 1.0
+
+            # Anti-Bleed: Clip end MUST NOT walk into the next spoken sentence
+            max_safe_end = next_s - 0.05
+            if max_safe_end < e - 0.10:
+                # Next speaker already started talking before this item ended!
+                penalty += 25.0
 
             bonus_pause = 0.0
-            bonus_next = 0.0
-            if i + 1 < len(transcript):
-                next_item = transcript[i+1]
-                next_s = float(next_item.get("start", e))
-                next_text = str(next_item.get("text", "")).strip()
-                next_words = next_text.split()
-                next_first_w = re.sub(r'[^\w]', '', next_words[0]).lower() if next_words else ""
-
-                gap = max(0.0, next_s - e)
-                if gap >= 0.30:
-                    bonus_pause += 5.0
-                elif gap >= 0.15:
-                    bonus_pause += 2.0
-                elif gap < 0.05 and not has_terminal:
-                    penalty += 3.0
-
-                if next_first_w in SENTENCE_STARTER_WORDS or (next_words and next_words[0][:1].isupper()):
-                    bonus_next += 3.5
-            else:
+            gap = max(0.0, next_s - e)
+            if gap >= 0.25:
+                bonus_pause += 6.0
+            elif gap >= 0.12:
                 bonus_pause += 3.0
 
-            score = dist + penalty - bonus_terminal - bonus_pause - bonus_next
+            score = dist + penalty - bonus_terminal - bonus_pause
             if score < best_score:
                 best_score = score
-                best_time = e + 0.28  # 280ms vocal decay room tone cushion
+                # Clamped end: never bleed into next sentence
+                best_time = min(e + 0.06, max_safe_end)
 
     return round(best_time, 2)
 
@@ -314,6 +312,12 @@ HOOK → CONTEXT → ESCALATION → PAYOFF
 - start_seconds: MUST be the exact second the speaker BEGINS a fresh sentence or thought. NEVER start mid-phrase, mid-syllable, or on a trailing conjunction (e.g., "...and then").
 - end_seconds: MUST be the exact second the speaker COMPLETES their full sentence, punchline, or reveal. NEVER end mid-sentence, mid-speech, or on connectors like "because", "which", "and", "or", "to", "that". The thought must be 100% finished and satisfying.
 
+6. CRITICAL NEGATIVE FILTER (STRICTLY FORBIDDEN CONTENT):
+- ZERO INTROS / GREETINGS: NEVER select opening greetings ("welcome back", "welcome to", "in this video today", "my name is", "today we are").
+- ZERO SPONSOR READS: NEVER select sponsorship plugs, promo codes, or ads ("sponsored by", "NordVPN", "use code", "link in description", "Patreon", "merch").
+- ZERO OUTRO HOUSEKEEPING: NEVER select channel housekeeping ("don't forget to like and subscribe", "hit the bell", "leave a comment", "see you next time").
+- ZERO RAMBLING BANTER: ONLY select moments that have a self-contained, high-impact mini-story arc (HOOK -> ESCALATION -> CLIMAX/REVEAL).
+
 NICHE FOCUS: {niche_label}
 {niche_instruction}
 
@@ -427,6 +431,7 @@ MASTER RULES FOR STORY-BASED SHORTS:
 - Do NOT artificially split one sentence or thought simply to create multiple parts.
 - Never invent dialogue, manipulate quotes, or distort the speaker's true meaning.
 - COMPLETE THOUGHTS ONLY: Every part must start at the beginning of a sentence and conclude on a fully resolved sentence or cliffhanger. NEVER cut off mid-speech, mid-sentence, or on connectors like "because", "which", "and", "or", "to".
+- NEGATIVE FILTER: Reject any opening video intros, sponsor reads, promo codes, or housekeeping. Focus 100% on the core dramatic storyline.
 
 PART-BY-PART PROGRESSION (100% CONTIGUOUS SAME STORY ARC):
 - PART 1 (Inciting Incident & Hook): Opens in the middle of tension. Introduces the shocking premise. Ends at a natural curiosity point / unanswered question (e.g. "I didn't realize what was happening until...").
@@ -1160,70 +1165,121 @@ def analyze_viral_clips(
             })
             cur_start = p_end  # Advance sequentially!
     else:
-        # Standalone clips: strictly distributed across distinct segments of the video timeline (Zero overlaps)
-        segment_size = max(40.0, (effective_total_dur - 20.0) / (num_clips + 1))
-        prev_end = 0.0
-        for i in range(num_clips):
-            target_time = max(prev_end + 15.0, (i + 1) * segment_size)
-            eligible_items = [it for it in (transcript or []) if float(it.get("start", 0)) >= prev_end + 5.0]
-            if eligible_items:
-                closest_item = min(eligible_items, key=lambda it: abs(float(it.get("start", 0)) - target_time))
-                start = snap_to_speech_boundary(float(closest_item.get("start", 0)), transcript or [], is_start=True, max_drift=3.5)
-                hook_spoken = closest_item.get("text", "")[:60]
-            else:
-                start = target_time
-                hook_spoken = f"Critical highlight moment at {int(start)}s"
+        # Content-Aware Standalone Narrative Extraction:
+        # Analyzes actual speech dialogue, filters out sponsors/housekeeping,
+        # scores hook density, and snaps to complete sentence boundaries.
+        SPONSOR_KEYWORDS = {
+            'sponsor', 'sponsored', 'nordvpn', 'expressvpn', 'surfshark', 'betterhelp', 'hellofresh',
+            'promo code', 'discount code', 'use code', 'patreon', 'merch', 'link in the description',
+            'link below', 'affiliate link', 'free trial'
+        }
+        HOUSEKEEPING_KEYWORDS = {
+            'welcome back', 'welcome to the podcast', 'welcome to the channel', 'in this video today',
+            'my name is', "don't forget to like and subscribe", 'subscribe to the channel',
+            'leave a comment', 'see you next week', 'thanks for watching'
+        }
+        HOOK_TRIGGERS = {
+            'why', 'how', 'secret', 'secrets', 'crazy', 'insane', 'shocking', 'never', 'always', 'money',
+            'million', 'billions', 'truth', 'died', 'prison', 'jail', 'police', 'arrested', 'mistake',
+            'warning', 'worst', 'best', 'killed', 'murder', 'rules', 'failed', 'destroy', 'dangerous',
+            'illegal', 'stolen', 'unbelievable', 'happened', 'realized', 'lost', 'confession'
+        }
 
-            if start < prev_end + 10.0:
-                start = prev_end + 10.0
+        narrative_candidates = []
+        if transcript and len(transcript) >= 5:
+            for i, item in enumerate(transcript):
+                s = float(item.get("start", 0.0))
+                first_text = item.get("text", "").strip()
+                words = first_text.split()
+                if not words:
+                    continue
+                first_w = re.sub(r'[^a-zA-Z]', '', words[0]).lower()
+                if first_w in {"and", "but", "or", "because", "so", "like", "yeah", "uh", "um"}:
+                    continue
 
-            raw_end = min(effective_total_dur, start + 38.0)
-            end = snap_to_speech_boundary(raw_end, transcript or [], is_start=False, max_drift=6.0, current_start=start)
-            if end - start < 18.0 or end <= start:
-                end = min(effective_total_dur, start + 38.0)
-            dur = round(end - start, 1)
+                for j in range(i + 4, min(i + 28, len(transcript))):
+                    end_item = transcript[j]
+                    e = float(end_item.get("start", 0.0)) + float(end_item.get("duration", 2.0))
+                    dur = e - s
+                    if dur < 24.0 or dur > 46.0:
+                        continue
 
-            chosen_badge = n_default["badges"][i % len(n_default["badges"])]
-            chosen_hook = hooks_pool[i % len(hooks_pool)]
-            chosen_emoji = n_default["emojis"][i % len(n_default["emojis"])]
+                    last_text = end_item.get("text", "").strip()
+                    last_words = last_text.split()
+                    if not last_words:
+                        continue
+                    last_w = re.sub(r'[^a-zA-Z]', '', last_words[-1]).lower()
+                    if last_w in INCOMPLETE_ENDING_WORDS:
+                        continue
 
-            # Generate a distinct, intriguing title for each clip based on its unique dialogue/moment
+                    window = transcript[i:j+1]
+                    window_text = " ".join(it.get("text", "") for it in window).lower()
+
+                    if any(sk in window_text for sk in SPONSOR_KEYWORDS) or any(hk in window_text for hk in HOUSEKEEPING_KEYWORDS):
+                        continue
+
+                    hook_count = sum(1 for ht in HOOK_TRIGGERS if ht in window_text)
+                    has_question = 1 if "?" in window_text else 0
+                    terminal_bonus = 2 if re.search(r'[\.\?\!]$', last_text) else 0
+
+                    score = (hook_count * 3) + (has_question * 4) + (terminal_bonus * 3)
+                    narrative_candidates.append({
+                        "score": score,
+                        "raw_start": s,
+                        "raw_end": e,
+                        "hook_spoken": first_text,
+                        "full_snippet": window_text[:80]
+                    })
+
+            narrative_candidates.sort(key=lambda x: x["score"], reverse=True)
+
+        used_intervals = []
+        for cand in narrative_candidates:
+            if len(fallback_clips) >= num_clips:
+                break
+            c_s = snap_to_speech_boundary(cand["raw_start"], transcript or [], is_start=True, max_drift=3.0)
+            c_e = snap_to_speech_boundary(cand["raw_end"], transcript or [], is_start=False, max_drift=4.0, current_start=c_s)
+            c_dur = round(c_e - c_s, 1)
+            if c_dur < 18.0 or c_dur > 58.0:
+                continue
+
+            # Ensure zero overlaps
+            if any(max(0.0, min(c_e, ex_e) - max(c_s, ex_s)) > 4.0 for ex_s, ex_e in used_intervals):
+                continue
+
+            used_intervals.append((c_s, c_e))
+            idx = len(fallback_clips)
+            chosen_badge = n_default["badges"][idx % len(n_default["badges"])]
+            chosen_hook = hooks_pool[idx % len(hooks_pool)]
+            chosen_emoji = n_default["emojis"][idx % len(n_default["emojis"])]
+            hook_spoken = cand["hook_spoken"][:60]
+
             content_words = [w for w in re.sub(r'[^\w\s]', '', hook_spoken).split() if len(w) > 2 and w.lower() not in ('this', 'that', 'with', 'from', 'have', 'were', 'what', 'there', 'they', 'when')]
             if len(content_words) >= 3:
-                slice_start = (i * 2) % max(1, len(content_words) - 2)
+                slice_start = (idx * 2) % max(1, len(content_words) - 2)
                 moment_title = " ".join(content_words[slice_start:slice_start + 4]).title()
                 clip_title = f"{moment_title} {chosen_emoji} #shorts"
             else:
                 clip_title = f"{chosen_hook} {chosen_emoji} #shorts"
 
-            # Enforce strict uniqueness across all clip titles
-            used_titles = {c.get("suggested_title") for c in fallback_clips}
-            candidate_title = clip_title
-            counter = 2
-            while candidate_title in used_titles:
-                base = clip_title.replace(" #shorts", "")
-                candidate_title = f"{base} #{counter} #shorts"
-                counter += 1
-            clip_title = candidate_title
-
             fallback_clips.append({
-                "clip_id": i + 1,
-                "start_seconds": start,
-                "end_seconds": end,
-                "duration": dur,
+                "clip_id": idx + 1,
+                "start_seconds": c_s,
+                "end_seconds": c_e,
+                "duration": c_dur,
                 "hook_text": censor_demonetized_text(hook_spoken),
                 "psychological_hook": censor_demonetized_text(chosen_hook),
                 "caption_art_direction": n_default["art"],
                 "sticker_badge": censor_demonetized_text(chosen_badge),
                 "reaction_spark_comment": censor_demonetized_text(n_default["comment"]),
                 "comment_strategy": n_default["strategy"],
-                "hook_rating": 95 - i * 2,
-                "viral_score": 93 - i * 2,
+                "hook_rating": 95 - idx * 2,
+                "viral_score": 93 - idx * 2,
                 "score_breakdown": {"hook_score": 28, "pacing_score": 19, "payoff_score": 18, "loop_score": 9, "caption_score": 9, "packaging_score": 10},
                 "virality_reason": "High curiosity opening and rapid pacing.",
                 "suggested_title": censor_demonetized_text(clip_title),
                 "thumbnail_hook_3words": "MUST WATCH",
-                "thumbnail_prompt": "Cinematic 8k close-up portrait, dramatic lighting, 9:16 vertical",
+                "thumbnail_prompt": f"Cinematic 8k close-up expressive creator portrait, dramatic studio lighting, neon rim lighting, 9:16 vertical, {chosen_hook}",
                 "thumbnail_visual_concept": "High contrast curiosity",
                 "thumbnail_color_theme": "yellow_black",
                 "suggested_description": censor_demonetized_text(f"Did you catch what happened? Drop your thoughts below 👇🔥 | Subscribe for daily stories 🚀 #{niche} #shorts #viral"),
@@ -1239,7 +1295,50 @@ def analyze_viral_clips(
                 "subscriber_cta": censor_demonetized_text("SUBSCRIBE FOR DAILY SECRETS 🚀"),
                 "pinned_comment": censor_demonetized_text("Did you expect this? Drop your thoughts below and subscribe 👇")
             })
-            prev_end = end
+
+        # If any slots remain, fill with timeline distribution
+        while len(fallback_clips) < num_clips:
+            idx = len(fallback_clips)
+            target_time = max(15.0, (idx + 1) * (effective_total_dur / (num_clips + 1)))
+            c_s = snap_to_speech_boundary(target_time, transcript or [], is_start=True, max_drift=5.0)
+            c_e = snap_to_speech_boundary(c_s + 38.0, transcript or [], is_start=False, max_drift=6.0, current_start=c_s)
+            c_dur = round(c_e - c_s, 1)
+            chosen_badge = n_default["badges"][idx % len(n_default["badges"])]
+            chosen_hook = hooks_pool[idx % len(hooks_pool)]
+            chosen_emoji = n_default["emojis"][idx % len(n_default["emojis"])]
+            fallback_clips.append({
+                "clip_id": idx + 1,
+                "start_seconds": c_s,
+                "end_seconds": c_e,
+                "duration": c_dur,
+                "hook_text": censor_demonetized_text(chosen_hook),
+                "psychological_hook": censor_demonetized_text(chosen_hook),
+                "caption_art_direction": n_default["art"],
+                "sticker_badge": censor_demonetized_text(chosen_badge),
+                "reaction_spark_comment": censor_demonetized_text(n_default["comment"]),
+                "comment_strategy": n_default["strategy"],
+                "hook_rating": 92 - idx * 2,
+                "viral_score": 90 - idx * 2,
+                "score_breakdown": {"hook_score": 26, "pacing_score": 18, "payoff_score": 18, "loop_score": 9, "caption_score": 9, "packaging_score": 10},
+                "virality_reason": "High curiosity opening and rapid pacing.",
+                "suggested_title": censor_demonetized_text(f"{chosen_hook} {chosen_emoji} #shorts"),
+                "thumbnail_hook_3words": "MUST WATCH",
+                "thumbnail_prompt": f"Cinematic 8k close-up expressive creator portrait, dramatic studio lighting, neon rim lighting, 9:16 vertical, {chosen_hook}",
+                "thumbnail_visual_concept": "High contrast curiosity",
+                "thumbnail_color_theme": "yellow_black",
+                "suggested_description": censor_demonetized_text(f"Did you catch what happened? Drop your thoughts below 👇🔥 | Subscribe for daily stories 🚀 #{niche} #shorts #viral"),
+                "tags": ["shorts", "viral", niche],
+                "clip_mode": clip_mode,
+                "niche": niche,
+                "series_id": None,
+                "series_title": None,
+                "part_number": None,
+                "total_parts": None,
+                "part_label": None,
+                "cliffhanger_hook": "And that changed everything.",
+                "subscriber_cta": censor_demonetized_text("SUBSCRIBE FOR DAILY SECRETS 🚀"),
+                "pinned_comment": censor_demonetized_text("Did you expect this? Drop your thoughts below and subscribe 👇")
+            })
 
     if not fallback_clips:
         print("[ViralAI] No transcript items available for fallback. Generating emergency timestamp clips...")

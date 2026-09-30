@@ -8,12 +8,17 @@ from google.genai import types
 def sanitize_clip_transcript(clip_transcript: List[Dict], clip_start: float, clip_end: float) -> List[Dict]:
     """
     Sanitize raw YouTube transcript segments:
-    1. Filter to within the clip boundaries.
+    1. Filter strictly to within the clip boundaries (no bleed from previous or next sentences).
     2. Eliminate temporal overlaps between consecutive items.
     3. Strip YouTube auto-caption speaker symbols (>>, >) and bracketed music/effects tags.
+    4. Drops trailing partial items that start within 0.5s of clip_end to prevent dangling mid-sentence cuts.
     """
     sorted_items = sorted(
-        [x for x in clip_transcript if (float(x.get("start", 0)) + float(x.get("duration", 2.0))) > clip_start and float(x.get("start", 0)) < clip_end],
+        [
+            x for x in clip_transcript
+            if float(x.get("start", 0)) >= (clip_start - 0.20)
+            and float(x.get("start", 0)) < (clip_end - 0.45)
+        ],
         key=lambda x: float(x.get("start", 0))
     )
 
@@ -28,7 +33,8 @@ def sanitize_clip_transcript(clip_transcript: List[Dict], clip_start: float, cli
         else:
             clean_end = min(clip_end - clip_start, raw_end)
 
-        if clean_end > raw_start + 0.15:
+        # Ensure duration is at least 0.30s for readability
+        if clean_end > raw_start + 0.30:
             text = item.get("text", "").strip()
             clean_text = re.sub(r'^(>>|>\s*)+', '', text).strip()
             clean_text = re.sub(r'\[.*?\]', '', clean_text).strip()

@@ -14,6 +14,9 @@ def build():
     print('  BUILDING VIRALSHORTS STUDIO STANDALONE EXECUTABLE (.EXE)')
     print('=' * 60)
 
+    yunet_model = os.path.join(BASE_DIR, 'storage', 'face_detection_yunet_2023mar.onnx')
+    model_data_arg = [f'--add-data={yunet_model};storage'] if os.path.exists(yunet_model) else []
+
     cmd = [
         sys.executable, '-m', 'PyInstaller',
         '--name=ViralShorts_Studio',
@@ -23,6 +26,7 @@ def build():
         f'--icon={ICON_PATH}',
         f'--add-data={TEMPLATES_DIR};app/templates',
         f'--add-data={STATIC_DIR};app/static',
+    ] + model_data_arg + [
         '--hidden-import=jinja2',
         '--hidden-import=flask',
         '--hidden-import=google.genai',
@@ -35,6 +39,8 @@ def build():
         '--hidden-import=PIL',
         '--hidden-import=requests',
         '--hidden-import=dotenv',
+        '--hidden-import=cv2',
+        '--hidden-import=numpy',
         os.path.join(BASE_DIR, 'run.py')
     ]
 
